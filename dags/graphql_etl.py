@@ -6,7 +6,7 @@ from airflow.operators.bash_operator import BashOperator
 
 default_args = {
     'owner': 'airflow',
-    'start_date': dt.datetime(2018, 11, 21, 00, 00, 00),
+    'start_date': dt.datetime(2018, 11, 28, 00, 00, 00),
     'concurrency': 1,
     'retries': 0
 }

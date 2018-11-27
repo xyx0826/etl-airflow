@@ -15,7 +15,7 @@ from airflow.hooks.postgres_hook import PostgresHook
 
 default_args = {
     'owner': 'airflow',
-    'start_date': dt.datetime(2018, 11, 21, 00, 00, 00),
+    'start_date': dt.datetime(2018, 11, 28, 00, 00, 00),
     'concurrency': 3,
     'retries': 0
 }
@@ -160,7 +160,7 @@ def upload_to_ago(**kwargs):
 
 with DAG('scooter_availability',
   default_args=default_args,
-  schedule_interval="0 1 * * *") as dag:
+  schedule_interval="*/15 * * * *") as dag:
 
   # Call Bird & insert to Postgres
   opr_get_bird = PythonOperator(
@@ -183,7 +183,7 @@ with DAG('scooter_availability',
 
   opr_dump_geojson = BashOperator(
     task_id = 'dump_geojson',
-    bash_command = 'rm /home/gisteam/scooter_availability.json && ogr2ogr -f GeoJSON /home/gisteam/scooter_availability.json pg:dbname=mobility public.availability'
+    bash_command = """rm /home/gisteam/scooter_availability.json && ogr2ogr -f GeoJSON /home/gisteam/scooter_availability.json -sql "SELECT * FROM availability where timestamp = (select max(timestamp) from availability)" pg:dbname=mobility public.availability"""
   )
 
   opr_upload_to_ago = PythonOperator(
@@ -196,19 +196,8 @@ with DAG('scooter_availability',
     }
   )
 
-  opr_tell_slack = SlackAPIOperator(
-    task_id='tell_slack',
-    slack_conn_id='cod_slack',
-    method='chat.postMessage',
-    api_params={
-      "channel": "#z_etl",
-      "text": "Yo, Airflow here."
-    }
-  )
-
-
 opr_get_bird >> opr_dump_geojson
 opr_get_lime >> opr_dump_geojson
 opr_get_spin >> opr_dump_geojson
 
-opr_dump_geojson >> opr_upload_to_ago >> opr_tell_slack
+opr_dump_geojson >> opr_upload_to_ago
