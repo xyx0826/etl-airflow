@@ -12,6 +12,3 @@ Changes we've made to the default configuration:
 
 - using a Postgres database for Airflow's metadata instead of the SQLite default
 - using `LocalExecutor` instead of the default `SequentialExecutor` for local parallelization
-
-
-
