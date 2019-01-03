@@ -50,11 +50,11 @@ def upload_to_ago(**kwargs):
 
 with DAG('scooter_7a',
   default_args=default_args,
-  schedule_interval="0 7 * * *") as dag:
+  schedule_interval="0 12 * * *") as dag:
 
   opr_dump_geojson = BashOperator(
     task_id = 'dump_geojson',
-    bash_command = """rm /home/gisteam/scooter_7a.json && ogr2ogr -f GeoJSON /home/gisteam/scooter_7a.json -sql "SELECT * FROM availability where timestamp = (select max(timestamp) from availability)" pg:dbname=mobility public.availability"""
+    bash_command = """rm /home/gisteam/scooter_7a.json && ogr2ogr -f GeoJSON /home/gisteam/scooter_7a.json -sql "SELECT a.*, cd.districts as district FROM availability a inner join council_districts cd on st_contains(cd.wkb_geometry, a.geom) where timestamp = (select max(timestamp) from availability)" pg:dbname=mobility public.availability"""
   )
 
   opr_upload_to_ago = PythonOperator(
@@ -62,7 +62,7 @@ with DAG('scooter_7a',
     provide_context=True,
     python_callable=upload_to_ago,
     op_kwargs={
-      "id": "",
+      "id": "424a9858887c4eadafbbe07b31cfeac3",
       "filepath": "/home/gisteam/scooter_7a.json"
     }
   )
