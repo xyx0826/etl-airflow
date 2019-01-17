@@ -52,8 +52,8 @@ def get_recent_file(name, directory):
 def csv_to_pg(**kwargs):
     conn = PostgresHook.get_connection('etl_postgres')
     engine = create_engine(f"postgres://{conn.host}/{conn.schema}")
-    df = pd.read_csv(f"/tmp/{kwargs['name']}.csv", delimiter='|', encoding='latin1')
-    df.to_sql(f"accela.{kwargs['name'].lower().replace('_', '')}", engine, if_exists='replace')
+    df = pd.read_csv(f"/tmp/{kwargs['name']}.csv", delimiter='|', encoding='latin1', low_memory=False)
+    df.to_sql(f"{kwargs['name'].lower().replace('_', '')}_update", con=engine, schema='accela', if_exists='replace')
 
 with DAG('accela',
     default_args=default_args,
