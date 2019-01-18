@@ -36,28 +36,28 @@ pg = PostgresHook(
   )
 
 def get_bird(**kwargs):
-  http = HttpHook('GET', http_conn_id='bird_gbfs')
+  http = HttpHook('GET', http_conn_id='bird_mds')
 
   # authentication for Bird
-  headers = {
-    'cookie': "__cfduid=d2f05c82286d876cc90162f808933a9951533661267",
-    'app-version': "3.0.0",
-    'authorization': "Bird eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBVVRIIiwidXNlcl9pZCI6ImI3YmFlZTZjLTZhOGMtNDI1NC1hZjFhLTU3NDVjYzExMmFjZiIsImRldmljZV9pZCI6ImViYjMyZjJlLTg3OTktNGQ5My04OWQ4LTFjYThhZDgyYzg1MiIsImV4cCI6MTU2NDYyNTYwNn0.K_1gnC8KvwmB1cUuJWH0QJB0LuX3DEATk_-AmkckkSA"
-    }
+  # headers = {
+  #   'cookie': "__cfduid=d2f05c82286d876cc90162f808933a9951533661267",
+  #   'app-version': "3.0.0",
+  #   'authorization': "Bird eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBVVRIIiwidXNlcl9pZCI6ImI3YmFlZTZjLTZhOGMtNDI1NC1hZjFhLTU3NDVjYzExMmFjZiIsImRldmljZV9pZCI6ImViYjMyZjJlLTg3OTktNGQ5My04OWQ4LTFjYThhZDgyYzg1MiIsImV4cCI6MTU2NDYyNTYwNn0.K_1gnC8KvwmB1cUuJWH0QJB0LuX3DEATk_-AmkckkSA"
+  #   }
 
   # get availability endpoint with limit = 1000
   response = http.run(
-    "/detroit/availability",
+    "/gbfs/detroit/free_bikes",
     {"limit": 1000},
-    headers
   )
 
   birds = json.loads(response.text)
 
-  for b in birds['availability']:
+  for b in birds['data']['bikes']:
     # pop values to store extras in extra column
-    device_id = b.pop('device_id')
-    location = b.pop('location')
+    device_id = b.pop('bike_id')
+    lat = b.pop('lat')
+    lon = b.pop('lon')
 
     insert = f"""
       insert into availability (
@@ -71,7 +71,7 @@ def get_bird(**kwargs):
         '{device_id}',
         '{kwargs['execution_date']}',
         '{json.dumps(b)}',
-        ST_SetSRID(ST_Force2D(ST_GeomFromGeoJSON('{json.dumps(location)}')), 4326)
+        ST_SetSRID(ST_MakePoint({lon},{lat}), 4326)
       )
     """
     pg.run(insert)
