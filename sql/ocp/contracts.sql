@@ -1,4 +1,4 @@
-drop view if exists ocp.contracts_socrata;
+drop view if exists ocp.contracts_socrata cascade;
 create view ocp.contracts_socrata as 
     select
         case 

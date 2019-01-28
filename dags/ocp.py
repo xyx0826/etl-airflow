@@ -1,5 +1,7 @@
 from airflow import DAG
 
+from airflow.models import Variable
+
 from datetime import datetime
 from sqlalchemy import create_engine
 import pandas as pd
@@ -33,7 +35,7 @@ def csv_to_pg(**kwargs):
     
     df = pd.read_csv(f"/tmp/{kwargs['name']}", low_memory=False)
     df.rename(columns=lambda x: clean_cols(x), inplace=True)
-    df.to_sql(name='contracts', con=engine, schema='ocp', if_exists='replace')
+    df.to_sql(name='contracts', con=engine, schema='ocp', if_exists='append')
 
 # Clean column names, remove special characters
 def clean_cols(name):
@@ -42,9 +44,28 @@ def clean_cols(name):
   name = name.replace(" ", "_").lower().strip()
   return name
 
+def upload_to_ago(**kwargs):
+  from arcgis.gis import GIS
+  gis = GIS("https://detroitmi.maps.arcgis.com", Variable.get('ago_user'), Variable.get('ago_pass'))
+
+  from arcgis.features import FeatureLayerCollection
+
+  # this is the ID of the FeatureLayer, not the ID of the .json file
+  item = gis.content.get(kwargs['id'])
+
+  flc = FeatureLayerCollection.fromitem(item)
+
+  flc.manager.overwrite(kwargs['filepath'])
+
 with DAG('ocp',
     default_args=default_args,
     schedule_interval="0 1 * * *") as dag:
+
+    # Empty yesterday's table first
+    opr_truncate_table = BashOperator(
+        task_id='psql_truncate',
+        bash_command='psql -d etl -c "truncate ocp.contracts"'
+    )
 
     # Retrieve CSV
     opr_retrieve_file = PythonOperator(
@@ -69,6 +90,20 @@ with DAG('ocp',
         bash_command='psql -d etl -f /home/gisteam/airflow/sql/ocp/contracts.sql'
     )
 
-    # Send view to Socrata, then AGO TBD
+    # Dump view to geojson
+    opr_dump_geojson = BashOperator(
+        task_id=f"dump_geojson",
+        bash_command=f"ogr2ogr -f GeoJSON /tmp/contracts.json pg:dbname=etl ocp.contracts_socrata"
+    )
 
-opr_retrieve_file >> opr_make_pgtable >> opr_transform
+    # Load geojson to AGO
+    opr_ago_upload = PythonOperator(
+        task_id=f"ago_upload",
+        python_callable=upload_to_ago,
+        op_kwargs = {
+            "id": 'd62b67c9bbe647f980178be556e3d292',
+            "filepath": f"/tmp/contracts.json"
+        }
+    )
+
+opr_truncate_table >> opr_retrieve_file >> opr_make_pgtable >> opr_transform >> opr_dump_geojson >> opr_ago_upload
