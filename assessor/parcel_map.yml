@@ -1,0 +1,11 @@
+
+metadata:
+  name: Parcel Map
+  description: A map of all the assessor's parcels.
+views:
+  mapbox:
+    destination: mapbox
+    select: 
+  ago:
+    destination: ago
+    select: 

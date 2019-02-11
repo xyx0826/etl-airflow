@@ -36,6 +36,25 @@ in the `example/` folder:
 
 More explanation of this to come.
 
+### _sources.yml
+
+This should be a YAML object:
+
+```yml
+<table name in the ETL database>:
+  connection: <airflow Connection name>
+  source_name: <source table name>
+  fields: 
+    - a
+    - list
+    - of
+    - source column names
+    - omitting this means we will "select *"
+  where: <a WHERE clause if you want to restrict what we get>
+<table>:
+  ...
+```
+
 ### More reading 
 
 - [DAG Best Practices](https://www.astronomer.io/guides/dag-best-practices/)
