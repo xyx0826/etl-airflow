@@ -21,4 +21,5 @@ create or replace view dlba.commercial_demos as (
       where (knock_start_dt::timestamp >= date '2014-01-01' or knock_start_dt is null)
         and commercial_demo_status in ('Demo Contracted', 'Demolished', 'Demo Pipeline') 
         and demo_pulled_date is null
+        and address not like '%Fake St%'
 )
