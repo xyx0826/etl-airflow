@@ -1,10 +1,12 @@
 from airflow import DAG
 import datetime as dt
-import os, re
+import os
+import re
+import yaml
+from common import sources
 
 from airflow.models import Variable
 
-from airflow.contrib.hooks.salesforce_hook import SalesforceHook
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.postgres_operator import PostgresOperator
@@ -20,14 +22,23 @@ with DAG('assessor',
     default_args=default_args,
     schedule_interval="0 1 * * *") as dag:
 
-    opr_dummy1 = BashOperator(
-        task_id='dummy',
-        bash_command="echo 'fake'"
-    )
+    sources_to_extract = yaml.load(open(f"{dag.dag_id}/_sources.yml"))
 
     opr_dummy2 = BashOperator(
         task_id='dummy2',
         bash_command="echo 'fake is the new real'"
     )
 
-    opr_dummy1.set_downstream(opr_dummy2)
+    for t, s in sources_to_extract.items():
+
+        s['name'] = t
+        s['dag'] = dag.dag_id
+
+        opr_extract = PythonOperator(
+            task_id=f"extract_{t}",
+            python_callable=sources.extract_source,
+            provide_context=True,
+            op_kwargs=s
+        )
+
+        opr_extract.set_downstream(opr_dummy2)
