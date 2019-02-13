@@ -1,0 +1,39 @@
+account:
+  connection: dlba_salesforce
+  source_name: Account
+  fields: 
+    - Council_District__c
+    - Current_Status__c
+    - Id
+    - Latitude__c
+    - Longitude__c
+    - Name
+    - Neighborhood__c
+    - Property_Class__c
+    - RecordTypeId
+    - Related_Property_Case__r.Id
+    - Property_Ownership__c
+    - Parcel_ID__c
+    - Inventory_Status_Socrata__c
+    - Occupancy_Model_Probability_Pct__c
+case:
+  connection: dlba_salesforce
+  source_name: Case
+  fields: 
+dlba_activity:
+  connection: dlba_salesforce
+  source_name: DLBA_Activity__c
+  fields: 
+prospective_buyer:
+  connection: dlba_salesforce
+  source_name: Prospective_Buyer__c
+  fields: 
+recordtype:
+  connection: dlba_salesforce
+  source_name: RecordType
+  fields: 
+dba_commercial_demo:
+  connection: dlba_salesforce
+  source_name: DBA_Commercial_Demo__c
+  fields: 
+
