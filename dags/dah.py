@@ -30,7 +30,7 @@ with DAG('dah',
         bash_command='psql -d etl -f /home/gisteam/airflow/dah/blight_violations.sql'
     )
 
-    sources_to_extract = yaml.load(open(f"{dag.dag_id}/_sources.yml"))
+    sources_to_extract = yaml.load(open(f"{os.environ['AIRFLOW_HOME']}/{dag.dag_id}/_sources.yml"))
 
     for t, s in sources_to_extract.items():
 

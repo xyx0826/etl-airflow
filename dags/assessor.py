@@ -22,7 +22,7 @@ with DAG('assessor',
     default_args=default_args,
     schedule_interval="0 1 * * *") as dag:
 
-    sources_to_extract = yaml.load(open(f"{dag.dag_id}/_sources.yml"))
+    sources_to_extract = yaml.load(open(f"{os.environ['AIRFLOW_HOME']}/{dag.dag_id}/_sources.yml"))
 
     opr_dummy2 = BashOperator(
         task_id='dummy2',

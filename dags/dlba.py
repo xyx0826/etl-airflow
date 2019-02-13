@@ -135,7 +135,7 @@ with DAG('dlba',
   # Transform & Load
 
   homedir = "/home/gisteam/airflow/sql/"
-  sqls = [f for f in os.listdir(f"/home/gisteam/airflow/sql/{dag.dag_id}") if f.endswith('.sql')]
+  sqls = [f for f in os.listdir(f"{os.environ['AIRFLOW_HOME']}/sql/{dag.dag_id}") if f.endswith('.sql')]
 
   open_datasets = {
       "side_lots_sold": [
@@ -171,7 +171,7 @@ with DAG('dlba',
     name = s.replace('.sql', '')
     opr_execute_sql = BashOperator(
         task_id=f"execute_sql_{name}",
-        bash_command=f"psql -d etl < {homedir}{dag.dag_id}/{s}"
+        bash_command=f"psql -d etl < {os.environ['AIRFLOW_HOME']}/{dag.dag_id}/{s}"
     )
 
     opr_dump_geojson = BashOperator(
