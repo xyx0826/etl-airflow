@@ -9,6 +9,8 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.postgres_operator import PostgresOperator
 
+from common import destinations
+
 default_args = {
     'owner': 'airflow',
     'start_date': dt.datetime(2019, 1, 16, 00, 00, 00),
@@ -79,19 +81,6 @@ def scrape_table(**kwargs):
   t = kwargs['table']
   data = sf.get_object_from_salesforce(t['sf_object'], t['fields'])
   sf.write_object_to_file([flatten_record(r) for r in data['records']], f"/tmp/{t['sf_object'].replace('__c','').lower()}.csv")
-
-def upload_to_ago(**kwargs):
-  from arcgis.gis import GIS
-  gis = GIS("https://detroitmi.maps.arcgis.com", Variable.get('ago_user'), Variable.get('ago_pass'))
-
-  from arcgis.features import FeatureLayerCollection
-
-  # this is the ID of the FeatureLayer, not the ID of the .json file
-  item = gis.content.get(kwargs['id'])
-
-  flc = FeatureLayerCollection.fromitem(item)
-
-  flc.manager.overwrite(kwargs['filepath'])
 
 with DAG('dlba',
   default_args=default_args,
@@ -184,7 +173,7 @@ with DAG('dlba',
     if name in open_datasets.keys():
         opr_ago_upload = PythonOperator(
             task_id=f"ago_upload_{name}",
-            python_callable=upload_to_ago,
+            python_callable=destinations.upload_to_ago,
             op_kwargs = {
                 "id": open_datasets[name][0]["arcgis_online"],
                 "filepath": f"/tmp/{name}.json"

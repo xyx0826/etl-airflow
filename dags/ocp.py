@@ -11,6 +11,8 @@ from airflow.hooks.postgres_hook import PostgresHook
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 
+from common import destinations
+
 default_args = {
     'owner': 'airflow',
     'start_date': datetime(2019, 1, 17, 00, 00, 00),
@@ -43,19 +45,6 @@ def clean_cols(name):
   name = name.replace("#", "")
   name = name.replace(" ", "_").lower().strip()
   return name
-
-def upload_to_ago(**kwargs):
-  from arcgis.gis import GIS
-  gis = GIS("https://detroitmi.maps.arcgis.com", Variable.get('ago_user'), Variable.get('ago_pass'))
-
-  from arcgis.features import FeatureLayerCollection
-
-  # this is the ID of the FeatureLayer, not the ID of the .json file
-  item = gis.content.get(kwargs['id'])
-
-  flc = FeatureLayerCollection.fromitem(item)
-
-  flc.manager.overwrite(kwargs['filepath'])
 
 with DAG('ocp',
     default_args=default_args,
@@ -99,7 +88,7 @@ with DAG('ocp',
     # Load geojson to AGO
     opr_ago_upload = PythonOperator(
         task_id=f"ago_upload",
-        python_callable=upload_to_ago,
+        python_callable=destinations.upload_to_ago,
         op_kwargs = {
             "id": 'd62b67c9bbe647f980178be556e3d292',
             "filepath": f"/tmp/contracts.json"

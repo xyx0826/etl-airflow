@@ -13,6 +13,8 @@ from airflow.models import Variable
 from airflow.hooks.http_hook import HttpHook
 from airflow.hooks.postgres_hook import PostgresHook
 
+from common import destinations
+
 default_args = {
     'owner': 'airflow',
     'start_date': dt.datetime(2018, 11, 28, 00, 00, 00),
@@ -145,19 +147,6 @@ def get_spin(**kwargs):
   
   return response
 
-def upload_to_ago(**kwargs):
-  from arcgis.gis import GIS
-  gis = GIS("https://detroitmi.maps.arcgis.com", Variable.get('ago_user'), Variable.get('ago_pass'))
-
-  from arcgis.features import FeatureLayerCollection
-
-  # this is the ID of the FeatureLayer, not the ID of the .json file
-  item = gis.content.get(kwargs['id'])
-
-  flc = FeatureLayerCollection.fromitem(item)
-
-  flc.manager.overwrite(kwargs['filepath'])
-
 with DAG('scooter_availability',
   default_args=default_args,
   schedule_interval="*/15 * * * *") as dag:
@@ -189,7 +178,7 @@ with DAG('scooter_availability',
   opr_upload_to_ago = PythonOperator(
     task_id='upload_to_ago',
     provide_context=True,
-    python_callable=upload_to_ago,
+    python_callable=destinations.upload_to_ago,
     op_kwargs={
       "id": "f5a877cdf4be4ea9a71ecbcbabd178d1",
       "filepath": "/home/gisteam/scooter_availability.json"
