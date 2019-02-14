@@ -27,10 +27,10 @@ with DAG('dah',
 
     opr_transform = BashOperator(
         task_id='transform',
-        bash_command=f"psql -d etl -f {os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/blight_violations.sql"
+        bash_command=f"psql -d etl -f {os.environ['AIRFLOW_HOME']}/{dag.dag_id}/blight_violations.sql"
     )
 
-    sources_to_extract = yaml.load(open(f"{os.environ['AIRFLOW_HOME']}/{dag.dag_id}/_sources.yml"))
+    sources_to_extract = yaml.load(open(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/_sources.yml"))
 
     for t, s in sources_to_extract.items():
 
