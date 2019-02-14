@@ -42,14 +42,7 @@ with DAG('dlba',
         op_kwargs=s
     )
 
-    opr_insert_table = PostgresOperator(
-        task_id = f"insert_table_{t}",
-        sql=f"COPY {dag.dag_id}.{t} from '/tmp/{t}.csv' WITH (FORMAT CSV, HEADER, DELIMITER ',')",
-        postgres_conn_id='etl_postgres'
-    )
-
-    opr_dummy.set_downstream(opr_extract)
-    opr_extract.set_downstream(opr_insert_table)
+    opr_extract.set_downstream(opr_dummy)
 
 #     opr_download_table = PythonOperator(
 #       task_id=f"get_table_{t}",

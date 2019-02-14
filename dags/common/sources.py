@@ -1,5 +1,7 @@
 from airflow.hooks.base_hook import BaseHook
 
+import re
+
 # import all the hooks
 from airflow.hooks.mssql_hook import MsSqlHook
 from airflow.contrib.hooks.salesforce_hook import SalesforceHook
@@ -49,10 +51,10 @@ def extract_source(**kwargs):
       statement = f"select {fields} from {kwargs['source_name']} {where}"
       recs = hook.get_records(statement)
 
-    elif conn_type == 'salesforce':
+    elif kwargs['connection'].endswith('_salesforce'):
       hook = SalesforceHook(kwargs['connection'])
       data = hook.get_object_from_salesforce(kwargs['source_name'], kwargs['fields'])
-      hook.write_object_to_file([flatten_record(r) for r in data['records']], f"/tmp/{t['source_name'].replace('__c','').lower()}.csv")
+      hook.write_object_to_file([flatten_record(r) for r in data['records']], f"/tmp/{kwargs['source_name'].replace('__c','').lower()}.csv")
       
     else:
       pass
@@ -68,8 +70,8 @@ def extract_source(**kwargs):
     if conn_type == 'mssql':
       pg_hook.insert_rows(f"{kwargs['dag']}.{kwargs['name']}", recs[100:])
     
-    elif conn_type == 'salesforce':
-      pass # this needs to execute COPY statement to insert from csvs
+    elif kwargs['connection'].endswith('_salesforce'):
+      pg_hook.run(f"COPY {kwargs['dag']}.{kwargs['name']} from '/tmp/{kwargs['source_name'].replace('__c','').lower()}.csv' WITH (FORMAT CSV, HEADER, DELIMITER ',')")
 
     else: 
       pass

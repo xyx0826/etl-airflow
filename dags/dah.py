@@ -37,12 +37,6 @@ with DAG('dah',
         s['name'] = t
         s['dag'] = dag.dag_id
 
-        opr_truncate = PostgresOperator(
-            task_id=f"truncate_{t}",
-            sql=f"truncate table {dag.dag_id}.{t} cascade",
-            postgres_conn_id='etl_postgres'
-        )
-
         opr_extract = PythonOperator(
             task_id=f"extract_{t}",
             python_callable=sources.extract_source,
@@ -50,7 +44,6 @@ with DAG('dah',
             op_kwargs=s
         )
 
-        opr_truncate.set_downstream(opr_extract)
         opr_extract.set_downstream(opr_wait)
 
 opr_wait >> opr_transform
