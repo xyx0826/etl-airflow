@@ -2,6 +2,8 @@ from airflow.hooks.base_hook import BaseHook
 
 import re
 
+from common import helpers
+
 # import all the hooks
 from airflow.hooks.mssql_hook import MsSqlHook
 from airflow.contrib.hooks.salesforce_hook import SalesforceHook
@@ -11,30 +13,6 @@ hooks = {
   'mssql': MsSqlHook,
   'salesforce': SalesforceHook
 }
-
-def flatten_record(rec):
-    new_rec = {}
-    for k,v in rec.items():
-        # if it's a relationship...
-        if k.endswith('__r'):
-            try:
-                # iterate through the OrderedDict we're given
-                for a, b in v.items():
-                    # ignore these keys
-                    if a not in ['type', 'url', 'attributes']:
-                        # construct a new key from the top-level key and the field name
-                        key = re.sub("__r$", "", k) + '_' + re.sub("__c$", "", a)
-                        # create it
-                        new_rec[key] = b
-            except AttributeError:
-                pass
-        # strip off '__c'
-        elif k.endswith('__c'):
-            new_rec[re.sub("__c$", "", k)] = v
-        # no __c? just add it
-        else:
-            new_rec[k] = v
-    return new_rec
 
 def extract_source(**kwargs):
     conn = BaseHook(kwargs['connection']).get_connection(kwargs['connection'])
@@ -54,7 +32,7 @@ def extract_source(**kwargs):
     elif kwargs['connection'].endswith('_salesforce'):
       hook = SalesforceHook(kwargs['connection'])
       data = hook.get_object_from_salesforce(kwargs['source_name'], kwargs['fields'])
-      hook.write_object_to_file([flatten_record(r) for r in data['records']], f"/tmp/{kwargs['source_name'].replace('__c','').lower()}.csv")
+      hook.write_object_to_file([helpers.flatten_salesforce_record(r) for r in data['records']], f"/tmp/{kwargs['source_name'].replace('__c','').lower()}.csv")
       
     else:
       pass
