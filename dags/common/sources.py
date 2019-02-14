@@ -46,7 +46,7 @@ def extract_source(**kwargs):
 
     # Insert the records
     if conn_type == 'mssql':
-      pg_hook.insert_rows(f"{kwargs['dag']}.{kwargs['name']}", recs[100:])
+      pg_hook.insert_rows(f"{kwargs['dag']}.{kwargs['name']}", recs)
     
     elif kwargs['connection'].endswith('_salesforce'):
       pg_hook.run(f"COPY {kwargs['dag']}.{kwargs['name']} from '/tmp/{kwargs['source_name'].replace('__c','').lower()}.csv' WITH (FORMAT CSV, HEADER, DELIMITER ',')")

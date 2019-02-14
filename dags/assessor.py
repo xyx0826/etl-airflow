@@ -4,6 +4,7 @@ import os
 import re
 import yaml
 from common import sources
+from common import destinations
 
 from airflow.models import Variable
 
@@ -24,9 +25,9 @@ with DAG('assessor',
 
     sources_to_extract = yaml.load(open(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/_sources.yml"))
 
-    opr_dummy2 = BashOperator(
-        task_id='dummy2',
-        bash_command="echo 'fake is the new real'"
+    opr_pause = BashOperator(
+        task_id='pause',
+        bash_command="echo 'Paused for extraction.'"
     )
 
     for t, s in sources_to_extract.items():
@@ -41,4 +42,52 @@ with DAG('assessor',
             op_kwargs=s
         )
 
-        opr_extract.set_downstream(opr_dummy2)
+        opr_extract.set_downstream(opr_pause)
+
+    # Loop through the open datasets
+    open_datasets = [ f for f in os.listdir(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}") if not f.startswith('_')]
+
+    for od in open_datasets:
+        od_name = od.split('.')[0]
+        od_config = yaml.load(open(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/{od}"))
+
+        # loop through the views
+        for d, v in od_config['views'].items():
+
+            v['name'] = f"{od_name}_{d}"
+            v['dag'] = dag.dag_id
+
+            # Make view & set downstream of opr_pause
+            opr_make_view = PostgresOperator(
+                task_id=f"make_view_{v['name']}",
+                sql=f"create or replace view {v['dag'] + '.' + v['name']} as ({v['select']})",
+                postgres_conn_id='etl_postgres'
+            )
+            opr_pause.set_downstream(opr_make_view)
+
+
+            # Get appropriate Operator & set downstream of make_view
+            opr_dump_file = destinations.pg_to_file(v)
+            opr_make_view.set_downstream(opr_dump_file)
+
+            if v['export'] == 'shapefile':
+                filepath = f"/tmp/{v['name']}.zip"
+            elif v['export'] == 'geojson':
+                filepath = f"/tmp/{v['name']}.json"
+
+            # Upload to AGO and set downstream of dump_file
+            opr_upload = PythonOperator(
+                task_id=f"upload_{v['name']}",
+                python_callable=destinations.upload_to_ago,
+                op_kwargs={
+                    "id": v['id'],
+                    "filepath": filepath
+                }
+            )
+            opr_dump_file.set_downstream(opr_upload)
+
+
+
+
+
+
