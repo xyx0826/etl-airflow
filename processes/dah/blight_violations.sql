@@ -1,6 +1,6 @@
 drop table if exists dah.bvn cascade;
 -- create initial master table
-create table dah.bvn as 
+create table dah.bvn ( 
   ticket_id bigint,
   ticket_number text,
   agency_name text,
@@ -38,7 +38,8 @@ create table dah.bvn as
   payment_status text,
   collection_status text,
   violation_address text,
-  parcelno text;
+  parcelno text
+);
 
 -- add indices on helper tables. speeds up ze joins
 create index if not exists dah_bvn_zticket_idx on dah.bvn using btree(ticket_id);
@@ -251,5 +252,5 @@ update dah.bvn
   where hearing_date > NOW();
 
 -- create view for AGO
-drop view if exists dah.bvn_ago cascade;
-create view dah.bvn_ago as select * from dah.bvn;
+-- drop view if exists dah.bvn_ago cascade;
+-- create view dah.bvn_ago as select * from dah.bvn;

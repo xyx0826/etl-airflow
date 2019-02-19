@@ -1,0 +1,9 @@
+metadata:
+  name: Blight Violations
+  description: Blight Violation Notices (BVN), or commonly blight tickets, are issued to property owners who violate City of Detroit ordinances that govern how to maintain property exteriors. Blight Tickets are issued by city inspectors, police officers, neighborhood city hall managers and other city officials who investigate complaints of blight and are managed by the Department of Appeals & Hearings (DAH).
+views:
+  ago:
+    destination: ago
+    id: e9de847b6f384788813b0b2685b426cb
+    export: geojson
+    select: select * from dah.bvn
