@@ -1,0 +1,23 @@
+
+metadata:
+  name: Property Sales
+  description: A record of all property sales in the city.
+views:
+  ago:
+    destination: ago
+    id: a78e08ef9c0c4ecbad144c3d03e2cf91
+    export: shapefile
+    select: select
+            id,
+            addresscombined as address,
+            pnum as parcel_no,
+            replace(saledate::text, ' ', 'T') as sale_date,
+            saleprice as sale_price,
+            terms,
+            instr as instrument,
+            grantor,
+            grantee,
+            salenum as sale_number,
+            st_centroid(st_transform(pa.wkb_geometry, 4326)) as geom
+            from assessor.sales sa
+            inner join assessor.parcel_shapes pa on sa.pnum = pa.parcelno

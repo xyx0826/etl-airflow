@@ -1,43 +1,20 @@
 select 
-	per."B1_ALT_ID" as csm_caseno,
-	o."B1_OWNER_FULL_NAME" as owner_name,
-  pdt."B1_CREATED_BY" as csm_recd_by,
-	per."REC_DATE" as csm_recd_date,
-	pa."B1_PARCEL_NBR" as parcelnum,
-	concat_ws(' ', a."B1_HSE_NBR_START", a."B1_STR_NAME") as address,
-	ac."G6_ACT_DES" as action_description,
-	'' as csa_creation_date,
-	'' as csa_date1,
-	'' as csa_date2,
-	'' as csa_date3,
-	ac."G6_STATUS" as csa_disp,
-	-- '' as pmb_dwelling_units,
-	-- '' as pmb_type_use,
-	'' as csm_status
--- SPATIAL JOIN	'' as prc_zip_code
+per."B1_ALT_ID" as record_id,
+proc."SD_PRO_DES" as task,
+regexp_replace(concat_ws(' ', addr."B1_HSE_NBR_START", addr."B1_STR_DIR", addr."B1_STR_NAME", addr."B1_STR_SUFFIX"), '\s{1,}', ' ') as address,
+addr."B1_SITUS_ZIP" as zip_code,
+own."B1_OWNER_FULL_NAME" as primary_name,
+to_date(per."REC_DATE", 'dd-MON-YY') as record_status_date,
+'' as expiration_date
 from b1permit per
-    LEFT OUTER JOIN bpermitdetail pdt ON per."B1_PER_ID1" = pdt."B1_PER_ID1" 
-    AND per."B1_PER_ID3" = pdt."B1_PER_ID3"
--- 		LEFT OUTER JOIN b1expiration e ON per."B1_PER_ID1" = e."B1_PER_ID1" 
---     AND per."B1_PER_ID3" = e."B1_PER_ID3"
--- 		LEFT OUTER JOIN gprocess gp ON per."B1_PER_ID1" = gp."B1_PER_ID1" 
---     AND per."B1_PER_ID3" = gp."B1_PER_ID3"
-		LEFT OUTER JOIN b3addres a ON per."B1_PER_ID1" = a."B1_PER_ID1" 
-    AND per."B1_PER_ID3" = a."B1_PER_ID3"
-		LEFT OUTER JOIN b3parcel pa ON per."B1_PER_ID1" = pa."B1_PER_ID1" 
-    AND per."B1_PER_ID3" = pa."B1_PER_ID3"
--- 		LEFT OUTER JOIN bworkdes wd ON per."B1_PER_ID1" = wd."B1_PER_ID1" 
---     AND per."B1_PER_ID3" = wd."B1_PER_ID3"
--- 		LEFT OUTER JOIN f4feeitem f ON per."B1_PER_ID1" = f."B1_PER_ID1" 
---     AND per."B1_PER_ID3" = f."B1_PER_ID3"
-		LEFT OUTER JOIN b3owners o ON per."B1_PER_ID1" = o."B1_PER_ID1" 
-    AND per."B1_PER_ID3" = o."B1_PER_ID3"
-		left outer JOIN g6action ac ON per."B1_PER_ID1" = ac."B1_PER_ID1" 
-    AND per."B1_PER_ID3" = ac."B1_PER_ID3"
-		LEFT OUTER JOIN b3contra c ON per."B1_PER_ID1" = c."B1_PER_ID1" 
-    AND per."B1_PER_ID3" = c."B1_PER_ID3"
-		LEFT OUTER JOIN bchckbox cb ON per."B1_PER_ID1" = cb."B1_PER_ID1" 
-    AND per."B1_PER_ID3" = cb."B1_PER_ID3"
-where 
-per."B1_PER_GROUP" = 'CodeEnforcement' and per."B1_PER_TYPE" = 'Inspections' and per."B1_PER_SUB_TYPE" = 'Vacant'
---and ac."G6_DOC_DES" = 'Insp Completed'
+left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1" and addr."B1_PER_ID3" = per."B1_PER_ID3"
+left outer join b3owners own on own."B1_PER_ID1" = per."B1_PER_ID1" and own."B1_PER_ID3" = per."B1_PER_ID3"
+left outer join gprocess proc on proc."B1_PER_ID1" = per."B1_PER_ID1" and proc."B1_PER_ID3" = per."B1_PER_ID3"
+where to_date(per."REC_DATE", 'dd-MON-YY') >= '2018-12-15'
+and per."B1_PER_GROUP" = 'CodeEnforcement'
+and per."B1_PER_TYPE" = 'Inspections'
+and per."B1_PER_SUB_TYPE" = 'Vacant'
+and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
+and own."B1_PRIMARY_OWNER" = 'Y'
+and proc."SD_PRO_DES" = 'Issue Registration'
+and own."B1_PRIMARY_OWNER" = 'Y';

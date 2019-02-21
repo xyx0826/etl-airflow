@@ -75,16 +75,17 @@ with DAG('assessor',
             elif v['export'] == 'geojson':
                 filepath = f"/tmp/{v['name']}.json"
 
-            # Upload to AGO and set downstream of dump_file
-            opr_upload = PythonOperator(
-                task_id=f"upload_{v['name']}",
-                python_callable=destinations.upload_to_ago,
-                op_kwargs={
-                    "id": v['id'],
-                    "filepath": filepath
-                }
-            )
-            opr_dump_file.set_downstream(opr_upload)
+            if v['id'] and len(v['id']) > 0:
+                # Upload to AGO and set downstream of dump_file
+                opr_upload = PythonOperator(
+                    task_id=f"upload_{v['name']}",
+                    python_callable=destinations.upload_to_ago,
+                    op_kwargs={
+                        "id": v['id'],
+                        "filepath": filepath
+                    }
+                )
+                opr_dump_file.set_downstream(opr_upload)
 
 
 

@@ -1,0 +1,51 @@
+estinfo:
+  connection: /home/gisteam/ExpData
+  source_name: EstInfo.TXT
+estlic:
+  connection: /home/gisteam/ExpData
+  source_name: ESTLIC.TXT
+iheader:
+  connection: /home/gisteam/ExpData
+  source_name: IHeader.TXT
+idetail:
+  connection: /home/gisteam/ExpData
+  source_name: IDetail.TXT
+instype:
+  connection: /home/gisteam/ExpData
+  source_name: Instype.TXT
+zipcode:
+  connection: /home/gisteam/ExpData
+  source_name: ZIPCODE.TXT
+riskcategory:
+  connection: /home/gisteam/ExpData
+  source_name: RiskCategory.TXT
+estatus:
+  connection: /home/gisteam/ExpData
+  source_name: ESTATUS.TXT
+etype:
+  connection: /home/gisteam/ExpData
+  source_name: ETYPE.TXT
+violate:
+  connection: /home/gisteam/ExpData
+  source_name: VIOLATE.TXT
+items:
+  connection: /home/gisteam/ExpData
+  source_name: ITEMS.TXT
+itemprob:
+  connection: /home/gisteam/ExpData
+  source_name: ITEMPROB.TXT
+problems:
+  connection: /home/gisteam/ExpData
+  source_name: PROBLEMS.TXT
+itemlist:
+  connection: /home/gisteam/ExpData
+  source_name: ITEMLIST.TXT
+corrects:
+  connection: /home/gisteam/ExpData
+  source_name: CORRECTS.TXT
+iitem:
+  connection: /home/gisteam/ExpData
+  source_name: IITEM.TXT
+mstrlist:
+  connection: /home/gisteam/ExpData  
+  source_name: MSTRLIST.TXT
