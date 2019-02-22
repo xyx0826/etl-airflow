@@ -1,0 +1,29 @@
+metadata:
+  name: Certificates of Compliance
+  description: Properties that have been issued a certificate of compliance by BSEED
+  timeframe: 
+views:
+  ago:
+    destination: ago
+    id: 
+    export: shapefile
+    select: select
+              concat_ws(' ', per."B1_PER_ID1", per."B1_PER_ID2", per."B1_PER_ID3") as accela_id,
+              per."B1_ALT_ID" as record_id,
+              regexp_replace(concat_ws(' ', addr."B1_HSE_NBR_START", addr."B1_STR_DIR", addr."B1_STR_NAME", addr."B1_STR_SUFFIX"), '\s{1,}', ' ') as address,
+              p."B1_PARCEL_NBR" as parcel_number,
+              addr."B1_SITUS_ZIP" as zip,
+              per."B1_APPL_STATUS" as status,
+              g."SD_PRO_DES" as task,
+              to_date(per."REC_DATE", 'dd-MON-YY') as date_status
+            FROM accela.b1permit per
+              LEFT OUTER JOIN accela.b3addres addr ON per."B1_PER_ID1" = addr."B1_PER_ID1" 
+                AND per."B1_PER_ID3" = addr."B1_PER_ID3"
+              LEFT OUTER JOIN accela.b3parcel p ON per."B1_PER_ID1" = p."B1_PER_ID1" 
+                AND per."B1_PER_ID3" = p."B1_PER_ID3"
+              LEFT OUTER JOIN accela.gprocess g ON per."B1_PER_ID1" = g."B1_PER_ID1" 
+                AND per."B1_PER_ID3" = g."B1_PER_ID3"
+              LEFT OUTER JOIN b3owners own ON own."B1_PER_ID1" = per."B1_PER_ID1" 
+                AND own."B1_PER_ID3" = per."B1_PER_ID3"
+            WHERE g."SD_PRO_DES" in ('Issue CofC')
+              AND to_date(g."G6_STAT_DD", 'dd-MON-YY') > date '2018-12-15'
