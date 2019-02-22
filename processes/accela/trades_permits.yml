@@ -1,0 +1,90 @@
+
+metadata:
+  name: Trades Permits
+  description: All trades permits issued by BSEED
+  timeframe: 
+views:
+  ago:
+    destination: ago
+    id: 
+    export: shapefile
+    select: select
+              per."B1_ALT_ID" as permit_no,
+              concat_ws(
+                ' ',
+                per."B1_PER_ID1",
+                per."B1_PER_ID2",
+                per."B1_PER_ID3"
+              ) as accela_id,
+              per."REC_DATE" as permit_issued,
+              e."EXPIRATION_DATE" as permit_expire,
+              pdt."B1_CLOSED_DATE" as permit_completed,
+              per."B1_APPL_STATUS" as permit_status,
+              concat_ws(' ', a."B1_HSE_NBR_START", a."B1_STR_NAME") as site_address,
+              pa."B1_PARCEL_NBR" as parcel_no,
+              pa."B1_LOT" as prc_lot,
+              pa."B1_SUBDIVISION" as prc_subdiv,
+              per."B1_PER_TYPE" as case_type,
+              wd."B1_WORK_DESC" as case_description,
+              pdt."TOTAL_FEE" as permit_fee,
+              pdt."TOTAL_PAY" as amount_paid,
+              pdt."BALANCE" as amount_due,
+              pa."B1_PARCEL_AREA" as parcel_size,
+              pa."B1_SUPERVISOR_DISTRICT" as parcel_cluster_sector,
+              pa."B1_PLAN_AREA" as parcel_floor_area,
+              (
+                select
+                  "B1_CHECKLIST_COMMENT"
+                from
+                  bchckbox
+                where
+                  bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
+                  and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
+                  and bchckbox."B1_CHECKBOX_DESC" = 'Type of Use'
+              ) as type_of_use,
+              (
+                select
+                  "B1_CHECKLIST_COMMENT"
+                from
+                  bchckbox
+                where
+                  bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
+                  and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
+                  and bchckbox."B1_CHECKBOX_DESC" = 'Type of Work'
+              ) as type_of_work,
+              per."B1_ALT_ID" as csm_caseno,
+              pdt."B1_CREATED_BY" as csf_created_by,
+              o."B1_OWNER_FULL_NAME" as owner_name,
+              o."B1_MAIL_ADDRESS1" as owner_address1,
+              c."B1_CAE_LNAME" as contractor_last_name,
+              c."B1_ADDRESS1" as contractor_address1
+            from
+              b1permit per
+              LEFT OUTER JOIN bpermitdetail pdt ON per."B1_PER_ID1" = pdt."B1_PER_ID1"
+              AND per."B1_PER_ID3" = pdt."B1_PER_ID3"
+              LEFT OUTER JOIN b1expiration e ON per."B1_PER_ID1" = e."B1_PER_ID1"
+              AND per."B1_PER_ID3" = e."B1_PER_ID3"
+              LEFT OUTER JOIN b3addres a ON per."B1_PER_ID1" = a."B1_PER_ID1"
+              AND per."B1_PER_ID3" = a."B1_PER_ID3"
+              LEFT OUTER JOIN b3parcel pa ON per."B1_PER_ID1" = pa."B1_PER_ID1"
+              AND per."B1_PER_ID3" = pa."B1_PER_ID3"
+              LEFT OUTER JOIN bworkdes wd ON per."B1_PER_ID1" = wd."B1_PER_ID1"
+              AND per."B1_PER_ID3" = wd."B1_PER_ID3"
+              LEFT OUTER JOIN b3owners o ON per."B1_PER_ID1" = o."B1_PER_ID1"
+              AND per."B1_PER_ID3" = o."B1_PER_ID3"
+              LEFT OUTER JOIN b3contra c ON per."B1_PER_ID1" = c."B1_PER_ID1"
+              AND per."B1_PER_ID3" = c."B1_PER_ID3"
+            where
+              per."B1_PER_GROUP" = 'Permits'
+              and per."B1_PER_TYPE" in (
+                'Electrical',
+                'Mechanical',
+                'BoilerPV',
+                'Elevator',
+                'Plumbing'
+              )
+              and to_date(per."REC_DATE", 'dd-MON-YY') > '2019-01-01'
+              and pa."B1_PRIMARY_PAR_FLG" = 'Y'
+              and o."B1_PRIMARY_OWNER" = 'Y'
+              and a."B1_PRIMARY_ADDR_FLG" = 'Y'
+              and per."B1_APPL_STATUS" = 'Permit Issued';

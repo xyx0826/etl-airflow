@@ -1,0 +1,52 @@
+
+metadata:
+  name: Annual Inspections
+  description: Annual commercial inspections
+  timeframe: 
+views:
+  ago:
+    destination: ago
+    id: 
+    export: shapefile
+    select: select
+              concat_ws(
+                '-',
+                per."B1_PER_ID1",
+                per."B1_PER_ID2",
+                per."B1_PER_ID3"
+              ),
+              per."B1_ALT_ID" as record_id,
+              initcap(
+                regexp_replace(
+                  concat_ws(
+                    ' ',
+                    addr."B1_HSE_NBR_START",
+                    addr."B1_STR_DIR",
+                    addr."B1_STR_NAME",
+                    addr."B1_STR_SUFFIX"
+                  ),
+                  '[\s,]{1,}',
+                  ' ',
+                  'g'
+                )
+              ) as address,
+              addr."B1_SITUS_ZIP" as zip,
+              act."G6_ACT_TYP" as inspection_type,
+              to_date("G6_ACT_DD", 'dd-MON-YY') as scheduled_date,
+              to_date(act."G6_STATUS_DD", 'dd-MON-YY') as date_inspection,
+              act."G6_STATUS" as result,
+              par."B1_PARCEL_NBR" as parcel_number
+            from
+              b1permit per
+              left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
+              and addr."B1_PER_ID3" = per."B1_PER_ID3"
+              left outer join b3parcel par on par."B1_PER_ID1" = per."B1_PER_ID1"
+              and par."B1_PER_ID3" = per."B1_PER_ID3"
+              left outer join g6action act on act."B1_PER_ID1" = per."B1_PER_ID1"
+              and act."B1_PER_ID3" = per."B1_PER_ID3"
+            where
+              to_date("G6_ACT_DD", 'dd-MON-YY') > '2019-01-01'
+              and act."G6_ACT_GRP" = 'Inspection'
+              and per."B1_PER_GROUP" = 'CodeEnforcement'
+              and per."B1_PER_TYPE" in ('Inspections')
+              and per."B1_PER_SUB_TYPE" = 'Commercial'
