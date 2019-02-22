@@ -113,7 +113,7 @@ with DAG('accela',
 
             opr_csv_dump = PostgresOperator(
                 task_id=f"dump_to_csv_{v['name']}",
-                sql=f"COPY {v['dag'] + '.' + v['name']} TO '/tmp/{v['name']}.csv' WITH (FORMAT CSV, HEADER);",
+                sql=f"COPY (select * from {v['dag'] + '.' + v['name']}) TO '/tmp/{v['name']}.csv' WITH (FORMAT CSV, HEADER);",
                 postgres_conn_id='etl_postgres'
             )
 
