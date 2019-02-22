@@ -8,34 +8,24 @@ views:
     id: 
     export: shapefile
     select: select
-              per."B1_ALT_ID" as license_number,
-							per."B1_PER_GROUP" as group,
+              contr."B1_LICENSE_NBR" as license_number,
 							per."B1_PER_SUB_TYPE" as sub_type,
-							per."B1_PER_CATEGORY" as category,
 							proc."SD_PRO_DES" as task,
-							own."B1_OWNER_FULL_NAME" as name_fml,
-							initcap(
-                regexp_replace(
-                  concat_ws(
-                    ' ',
-                    addr."B1_HSE_NBR_START",
-                    addr."B1_STR_DIR",
-                    addr."B1_STR_NAME",
-                    addr."B1_STR_SUFFIX"
-                  ),
-                  '[\s,]{1,}',
-                  ' ',
-                  'g'
-                )
-              ) as address,
-							'' as business_license_number,
+							per."B1_PER_CATEGORY" as category,
+							contr."B1_LICENSE_TYPE" as license_type,
+							trim(concat_ws(' ', contr."B1_CAE_FNAME", contr."B1_CAE_MNAME", contr."B1_CAE_LNAME")) as name_fml,
+							contr."B1_ADDRESS1" as address,
+							contr."B1_CITY" as city,
+							contr."B1_STATE" as state,
+							contr."B1_ZIP" as zip,
+							contr."B1_BUS_LIC" as business_license_number,
 							contr."B1_BUS_NAME" as business_name,
-							'' as business_name_two, # should read 'Active' or null
-							'' as comments,
+							contr."B1_BUS_NAME2" as business_name_two,
+							contr."B1_COMMENT" as comments,
 							'' as license_expiration,
 							to_date(per."REC_DATE", 'dd-MON-YY') as license_issued,
 							'' as license_renewed,
-							'' as status # value is 'A'
+							contr."REC_STATUS" as status
             from b1permit per
               left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
                 and addr."B1_PER_ID3" = per."B1_PER_ID3"
@@ -56,3 +46,4 @@ views:
             where per."B1_PER_SUB_TYPE" = 'ContractorRegistration'
 							AND proc."SD_PRO_DES" = 'License Issuance'
               AND to_date(per."REC_DATE", 'dd-MON-YY') > date '2018-12-07'
+              
