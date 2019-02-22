@@ -1,7 +1,7 @@
 
 metadata:
-  name: Annual Inspections
-  description: Annual commercial inspections
+  name: Residential Inspections
+  description: Residential inspections
   timeframe: 
 views:
   ago:
@@ -49,4 +49,4 @@ views:
               and act."G6_ACT_GRP" = 'Inspection'
               and per."B1_PER_GROUP" = 'CodeEnforcement'
               and per."B1_PER_TYPE" in ('Inspections')
-              and per."B1_PER_SUB_TYPE" = 'Commercial'
+              and per."B1_PER_SUB_TYPE" = 'Residential'
