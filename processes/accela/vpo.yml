@@ -41,5 +41,4 @@ views:
               and per."B1_PER_SUB_TYPE" = 'Vacant'
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
               and own."B1_PRIMARY_OWNER" = 'Y'
-              and proc."SD_PRO_DES" = 'Issue Registration'
-              and own."B1_PRIMARY_OWNER" = 'Y';
+              and proc."SD_PRO_DES" = 'Issue Registration';
