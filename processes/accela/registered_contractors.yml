@@ -22,9 +22,9 @@ views:
 							contr."B1_BUS_NAME" as business_name,
 							contr."B1_BUS_NAME2" as business_name_two,
 							contr."B1_COMMENT" as comments,
-							'' as license_expiration,
-							to_date(per."REC_DATE", 'dd-MON-YY') as license_issued,
-							'' as license_renewed,
+							to_date(contr."B1_LIC_EXPIR_DD", 'dd-MON-YY') as license_expiration,
+							to_date(contr."B1_LIC_ORIG_ISS_DD", 'dd-MON-YY') as license_issued,
+							to_date(contr."B1_LAST_RENEWAL_DD", 'dd-MON-YY') as license_renewed,
 							contr."REC_STATUS" as status
             from b1permit per
               left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
@@ -45,5 +45,3 @@ views:
                 and proc."B1_PER_ID3" = per."B1_PER_ID3"
             where per."B1_PER_SUB_TYPE" = 'ContractorRegistration'
 							AND proc."SD_PRO_DES" = 'License Issuance'
-              AND to_date(per."REC_DATE", 'dd-MON-YY') > date '2018-12-07'
-              
