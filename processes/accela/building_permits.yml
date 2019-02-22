@@ -111,4 +111,4 @@ views:
               and own."B1_PRIMARY_OWNER" = 'Y'
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
               and chck."B1_CHECKBOX_DESC_ALT" = 'Estimated Cost of Construction By Contractor/Homeowner'
-              and proc."SD_PRO_DES" = 'Permit Issuance';
+              and proc."SD_PRO_DES" = 'Permit Issuance'

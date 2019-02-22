@@ -1,12 +1,17 @@
 from airflow import DAG
 
 import datetime as dt
+import os
+import re
+import yaml
 from sqlalchemy import create_engine
 import pandas as pd
 
 from airflow.contrib.hooks.ftp_hook import FTPHook
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.operators.python_operator import PythonOperator
+from airflow.operators.postgres_operator import PostgresOperator
+from airflow.operators.bash_operator import BashOperator
 
 default_args = {
     'owner': 'airflow',
@@ -66,6 +71,11 @@ with DAG('accela',
         python_callable=get_ftp_files,
     )
 
+    opr_pause = BashOperator(
+        task_id='post_extract_pause',
+        bash_command="echo 'Stay cool.'"
+    )
+
     # Create Postgres tables
     for t in tables:
         opr_make_pgtables = PythonOperator(
@@ -78,8 +88,38 @@ with DAG('accela',
         )
 
         opr_make_pgtables.set_upstream(opr_retrieve_files)
+        opr_pause.set_upstream(opr_make_pgtables)
+    
 
-        # TBD Insert daily updates into master tables
+    open_datasets = [ f for f in os.listdir(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}") if not f.startswith('_')]
+
+    for od in open_datasets:
+        od_name = od.split('.')[0]
+        od_config = yaml.load(open(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/{od}"))
+
+        # loop through the views
+        for d, v in od_config['views'].items():
+
+            v['name'] = f"{od_name}_{d}"
+            v['dag'] = dag.dag_id
+
+            # Make view & set downstream of opr_pause
+            opr_make_view = PostgresOperator(
+                task_id=f"make_view_{v['name']}",
+                sql=f"create or replace view {v['dag'] + '.' + v['name']} as ({v['select']})",
+                postgres_conn_id='etl_postgres'
+            )
+            opr_pause.set_downstream(opr_make_view)
+
+            opr_csv_dump = PostgresOperator(
+                task_id=f"dump_to_csv_{v['name']}",
+                sql=f"COPY (select * from {v['dag'] + '.' + v['name']}) TO '/tmp/{v['name']}.csv' WITH (FORMAT CSV, HEADER);",
+                postgres_conn_id='etl_postgres'
+            )
+
+            opr_make_view.set_downstream(opr_csv_dump)
+
+    # TBD Insert daily updates into master tables
 
     # TBD Create open data views
 

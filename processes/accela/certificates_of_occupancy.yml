@@ -59,4 +59,4 @@ views:
               and per."B1_PER_TYPE" = 'Building'
               and per."B1_PER_SUB_TYPE" = 'Application'
               and proc."SD_APP_DES" = 'CofO Issued'
-              and to_date(proc."REC_DATE", 'dd-MON-YY') > '2019-01-01';
+              and to_date(proc."REC_DATE", 'dd-MON-YY') > '2019-01-01'

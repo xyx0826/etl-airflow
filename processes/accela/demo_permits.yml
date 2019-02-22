@@ -29,7 +29,7 @@ views:
                   'g'
                 )
               ) as address,
-							par."B1_COUNCIL_DISTRICT" as council,
+              par."B1_COUNCIL_DISTRICT" as council,
               par."B1_PARCEL_NBR" as parcel_number,
               '' as area_parcel,
               to_date(per."REC_DATE", 'dd-MON-YY') as permit_issue_date,
@@ -37,7 +37,7 @@ views:
               '' as current_legal_use,
               chck."B1_CHECKLIST_COMMENT" as type_of_use,
               des."B1_WORK_DESC" as permit_description,
-							'' as estimate,
+              '' as estimate,
               det."TOTAL_FEE" as fee_amount,
               det."BALANCE" as amount_due,
               det."TOTAL_PAY" as amount_paid,
@@ -75,7 +75,7 @@ views:
                 'g'
               ) as contractor_address,
               contr."B1_PHONE1" as contractor_phone,
-							'' as contractor_email,
+              '' as contractor_email,
               proc."SD_APP_DES" as status,
               proc."SD_PRO_DES" as task
             from
