@@ -127,4 +127,4 @@ views:
               and pa."B1_PRIMARY_PAR_FLG" = 'Y'
               and o."B1_PRIMARY_OWNER" = 'Y'
               and a."B1_PRIMARY_ADDR_FLG" = 'Y'
-              and per."B1_APPL_STATUS" = 'Permit Issued';
+              and per."B1_APPL_STATUS" = 'Permit Issued'

@@ -198,4 +198,4 @@ views:
               and per."B1_APPL_STATUS" = 'Issued'
               and own."B1_PRIMARY_OWNER" = 'Y'
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
-              and proc."SD_PRO_DES" = 'Permit Issuance';
+              and proc."SD_PRO_DES" = 'Permit Issuance'

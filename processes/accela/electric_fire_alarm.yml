@@ -34,7 +34,6 @@ views:
               '' as permit_type,
               '' as current_legal_use,
               '' as type_of_construction,
-              --chck."B1_CHECKLIST_COMMENT" as estimate,
               (
                 select
                   "B1_CHECKLIST_COMMENT"
@@ -123,4 +122,4 @@ views:
               and own."B1_PRIMARY_OWNER" = 'Y'
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
               and par."B1_PARCEL_STATUS" = 'A'
-              and proc."SD_PRO_DES" = 'Permit Issuance';
+              and proc."SD_PRO_DES" = 'Permit Issuance'
