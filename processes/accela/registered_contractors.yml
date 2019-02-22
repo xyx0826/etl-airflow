@@ -8,40 +8,40 @@ views:
     id: 
     export: shapefile
     select: select
-              contr."B1_LICENSE_NBR" as license_number,
-							per."B1_PER_SUB_TYPE" as sub_type,
-							proc."SD_PRO_DES" as task,
-							per."B1_PER_CATEGORY" as category,
-							contr."B1_LICENSE_TYPE" as license_type,
-							trim(concat_ws(' ', contr."B1_CAE_FNAME", contr."B1_CAE_MNAME", contr."B1_CAE_LNAME")) as name_fml,
-							contr."B1_ADDRESS1" as address,
-							contr."B1_CITY" as city,
-							contr."B1_STATE" as state,
-							contr."B1_ZIP" as zip,
-							contr."B1_BUS_LIC" as business_license_number,
-							contr."B1_BUS_NAME" as business_name,
-							contr."B1_BUS_NAME2" as business_name_two,
-							contr."B1_COMMENT" as comments,
-							to_date(contr."B1_LIC_EXPIR_DD", 'dd-MON-YY') as license_expiration,
-							to_date(contr."B1_LIC_ORIG_ISS_DD", 'dd-MON-YY') as license_issued,
-							to_date(contr."B1_LAST_RENEWAL_DD", 'dd-MON-YY') as license_renewed,
-							contr."REC_STATUS" as status
-            from b1permit per
-              left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
-                and addr."B1_PER_ID3" = per."B1_PER_ID3"
-              left outer join b3parcel par on par."B1_PER_ID1" = per."B1_PER_ID1"
-                and par."B1_PER_ID3" = per."B1_PER_ID3"
-              left outer join b3owners own on own."B1_PER_ID1" = per."B1_PER_ID1"
-                and own."B1_PER_ID3" = per."B1_PER_ID3"
-              left outer join bworkdes des on des."B1_PER_ID1" = per."B1_PER_ID1"
-                and des."B1_PER_ID3" = per."B1_PER_ID3"
-              left outer join bpermitdetail det on det."B1_PER_ID1" = per."B1_PER_ID1"
-                and det."B1_PER_ID3" = per."B1_PER_ID3"
-              left outer join bchckbox chck on chck."B1_PER_ID1" = per."B1_PER_ID1"
-                and chck."B1_PER_ID3" = per."B1_PER_ID3"
-              left outer join b3contra contr on contr."B1_PER_ID1" = per."B1_PER_ID1"
-                and contr."B1_PER_ID3" = per."B1_PER_ID3"
-              left outer join gprocess proc on proc."B1_PER_ID1" = per."B1_PER_ID1"
-                and proc."B1_PER_ID3" = per."B1_PER_ID3"
-            where per."B1_PER_SUB_TYPE" = 'ContractorRegistration'
-							AND proc."SD_PRO_DES" = 'License Issuance'
+            contr."B1_LICENSE_NBR" as license_number,
+            per."B1_PER_SUB_TYPE" as sub_type,
+            proc."SD_PRO_DES" as task,
+            per."B1_PER_CATEGORY" as category,
+            contr."B1_LICENSE_TYPE" as license_type,
+            trim(concat_ws(' ', contr."B1_CAE_FNAME", contr."B1_CAE_MNAME", contr."B1_CAE_LNAME")) as name_fml,
+            contr."B1_ADDRESS1" as address,
+            contr."B1_CITY" as city,
+            contr."B1_STATE" as state,
+            contr."B1_ZIP" as zip,
+            contr."B1_BUS_LIC" as business_license_number,
+            contr."B1_BUS_NAME" as business_name,
+            contr."B1_BUS_NAME2" as business_name_two,
+            contr."B1_COMMENT" as comments,
+            to_date(contr."B1_LIC_EXPIR_DD", 'dd-MON-YY') as license_expiration,
+            to_date(contr."B1_LIC_ORIG_ISS_DD", 'dd-MON-YY') as license_issued,
+            to_date(contr."B1_LAST_RENEWAL_DD", 'dd-MON-YY') as license_renewed,
+            contr."REC_STATUS" as status
+          from b1permit per
+            left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
+              and addr."B1_PER_ID3" = per."B1_PER_ID3"
+            left outer join b3parcel par on par."B1_PER_ID1" = per."B1_PER_ID1"
+              and par."B1_PER_ID3" = per."B1_PER_ID3"
+            left outer join b3owners own on own."B1_PER_ID1" = per."B1_PER_ID1"
+              and own."B1_PER_ID3" = per."B1_PER_ID3"
+            left outer join bworkdes des on des."B1_PER_ID1" = per."B1_PER_ID1"
+              and des."B1_PER_ID3" = per."B1_PER_ID3"
+            left outer join bpermitdetail det on det."B1_PER_ID1" = per."B1_PER_ID1"
+              and det."B1_PER_ID3" = per."B1_PER_ID3"
+            left outer join bchckbox chck on chck."B1_PER_ID1" = per."B1_PER_ID1"
+              and chck."B1_PER_ID3" = per."B1_PER_ID3"
+            left outer join b3contra contr on contr."B1_PER_ID1" = per."B1_PER_ID1"
+              and contr."B1_PER_ID3" = per."B1_PER_ID3"
+            left outer join gprocess proc on proc."B1_PER_ID1" = per."B1_PER_ID1"
+              and proc."B1_PER_ID3" = per."B1_PER_ID3"
+          where per."B1_PER_SUB_TYPE" = 'ContractorRegistration'
+            AND proc."SD_PRO_DES" = 'License Issuance'
