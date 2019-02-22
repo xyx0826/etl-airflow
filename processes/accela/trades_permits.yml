@@ -20,7 +20,20 @@ views:
               e."EXPIRATION_DATE" as permit_expire,
               pdt."B1_CLOSED_DATE" as permit_completed,
               per."B1_APPL_STATUS" as permit_status,
-              concat_ws(' ', a."B1_HSE_NBR_START", a."B1_STR_NAME") as site_address,
+              initcap(
+                regexp_replace(
+                  concat_ws(
+                    ' ',
+                    a."B1_HSE_NBR_START",
+                    a."B1_STR_DIR",
+                    a."B1_STR_NAME",
+                    a."B1_STR_SUFFIX"
+                  ),
+                  '[\s,]{1,}',
+                  ' ',
+                  'g'
+                )
+              ) as address,
               pa."B1_PARCEL_NBR" as parcel_no,
               pa."B1_LOT" as prc_lot,
               pa."B1_SUBDIVISION" as prc_subdiv,
@@ -55,9 +68,36 @@ views:
               per."B1_ALT_ID" as csm_caseno,
               pdt."B1_CREATED_BY" as csf_created_by,
               o."B1_OWNER_FULL_NAME" as owner_name,
-              o."B1_MAIL_ADDRESS1" as owner_address1,
+              regexp_replace(
+                concat_ws(
+                  ', ',
+                  o."B1_MAIL_ADDRESS1",
+                  o."B1_MAIL_ADDRESS2",
+                  o."B1_MAIL_ADDRESS3",
+                  o."B1_MAIL_CITY",
+                  o."B1_MAIL_STATE",
+                  o."B1_MAIL_ZIP",
+                  o."B1_MAIL_COUNTRY"
+                ),
+                '[\s,]{1,}',
+                ' ',
+                'g'
+              ) as owner_address,              
               c."B1_CAE_LNAME" as contractor_last_name,
-              c."B1_ADDRESS1" as contractor_address1
+              regexp_replace(
+                concat_ws(
+                  ' ',
+                  c."B1_ADDRESS1",
+                  c."B1_ADDRESS2",
+                  c."B1_ADDRESS3",
+                  c."B1_CITY",
+                  c."B1_STATE",
+                  c."B1_ZIP"
+                ),
+                '[\s,]{1,}',
+                ' ',
+                'g'
+              ) as contractor_address1
             from
               b1permit per
               LEFT OUTER JOIN bpermitdetail pdt ON per."B1_PER_ID1" = pdt."B1_PER_ID1"
