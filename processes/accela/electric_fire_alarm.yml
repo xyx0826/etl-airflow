@@ -30,7 +30,7 @@ views:
                   'g'
                 )
               ) as address,
-              to_date(per."REC_DATE", 'dd-MON-YY') as permit_issue_date,
+              to_date(proc."G6_STAT_DD", 'dd-MON-YY') as permit_issue_date,
               '' as permit_type,
               '' as current_legal_use,
               '' as type_of_construction,
@@ -95,10 +95,10 @@ views:
               proc."SD_APP_DES" as status,
               proc."SD_PRO_DES" as task,
               par."B1_COUNCIL_DISTRICT" as council,
-              '' as date_completed,
-              '' as date_expiration,
+              det."B1_COMPLETE_DATE" as date_completed,
+              exp."EXPIRATION_DATE" as date_expiration,
               par."B1_PARCEL_NBR" as parcel_number,
-              '' as area_parcel
+              par."B1_PARCEL_AREA" as area_parcel
             from
               b1permit per
               left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
@@ -115,6 +115,8 @@ views:
               and contr."B1_PER_ID3" = per."B1_PER_ID3"
               left outer join gprocess proc on proc."B1_PER_ID1" = per."B1_PER_ID1"
               and proc."B1_PER_ID3" = per."B1_PER_ID3"
+              left outer join b1expiration exp on exp."B1_PER_ID1" = per."B1_PER_ID1"
+              and exp."B1_PER_ID3" = per."B1_PER_ID3"
             where
               to_date(per."REC_DATE", 'dd-MON-YY') >= '2019-01-01'
               and per."B1_PER_GROUP" = 'Permits'

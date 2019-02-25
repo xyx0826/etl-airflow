@@ -16,10 +16,10 @@ views:
                 per."B1_PER_ID2",
                 per."B1_PER_ID3"
               ) as accela_id,
-              per."REC_DATE" as permit_issued,
+              to_date(proc."G6_STAT_DD", 'dd-MON-YY') as permit_issued,
               e."EXPIRATION_DATE" as permit_expire,
-              pdt."B1_CLOSED_DATE" as permit_completed,
-              per."B1_APPL_STATUS" as permit_status,
+              pdt."B1_COMPLETE_DATE" as permit_completed,
+              proc."SD_APP_DES" as permit_status,
               initcap(
                 regexp_replace(
                   concat_ws(
@@ -37,7 +37,7 @@ views:
               pa."B1_PARCEL_NBR" as parcel_no,
               pa."B1_LOT" as prc_lot,
               pa."B1_SUBDIVISION" as prc_subdiv,
-              per."B1_PER_TYPE" as case_type,
+              # per."B1_PER_TYPE" as case_type,
               wd."B1_WORK_DESC" as case_description,
               pdt."TOTAL_FEE" as permit_fee,
               pdt."TOTAL_PAY" as amount_paid,
@@ -65,7 +65,6 @@ views:
                   and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
                   and bchckbox."B1_CHECKBOX_DESC" = 'Type of Work'
               ) as type_of_work,
-              per."B1_ALT_ID" as csm_caseno,
               pdt."B1_CREATED_BY" as csf_created_by,
               o."B1_OWNER_FULL_NAME" as owner_name,
               regexp_replace(
@@ -114,6 +113,8 @@ views:
               AND per."B1_PER_ID3" = o."B1_PER_ID3"
               LEFT OUTER JOIN b3contra c ON per."B1_PER_ID1" = c."B1_PER_ID1"
               AND per."B1_PER_ID3" = c."B1_PER_ID3"
+              left outer join gprocess proc on proc."B1_PER_ID1" = c."B1_PER_ID1"
+              AND proc."B1_PER_ID3" = c."B1_PER_ID3"
             where
               per."B1_PER_GROUP" = 'Permits'
               and per."B1_PER_TYPE" in (

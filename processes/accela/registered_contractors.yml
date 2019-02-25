@@ -11,7 +11,7 @@ views:
             contr."B1_LICENSE_NBR" as license_number,
             per."B1_PER_SUB_TYPE" as sub_type,
             proc."SD_PRO_DES" as task,
-            per."B1_PER_CATEGORY" as category,
+            per."B1_APPL_STATUS" as category,
             contr."B1_LICENSE_TYPE" as license_type,
             trim(concat_ws(' ', contr."B1_CAE_FNAME", contr."B1_CAE_MNAME", contr."B1_CAE_LNAME")) as name_fml,
             contr."B1_ADDRESS1" as address,
@@ -23,9 +23,9 @@ views:
             contr."B1_BUS_NAME2" as business_name_two,
             contr."B1_COMMENT" as comments,
             to_date(contr."B1_LIC_EXPIR_DD", 'dd-MON-YY') as license_expiration,
-            to_date(contr."B1_LIC_ORIG_ISS_DD", 'dd-MON-YY') as license_issued,
+            to_date(contr."B1_LAST_UPDATE_DD", 'dd-MON-YY') as license_issued,
             to_date(contr."B1_LAST_RENEWAL_DD", 'dd-MON-YY') as license_renewed,
-            contr."REC_STATUS" as status
+            proc."SD_APP_DES" as status
           from b1permit per
             left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
               and addr."B1_PER_ID3" = per."B1_PER_ID3"

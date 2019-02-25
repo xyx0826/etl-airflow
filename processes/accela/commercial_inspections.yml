@@ -1,7 +1,6 @@
-
 metadata:
   name: Commercial Inspections
-  description: Commercial inspections conducted by BSEED (aka Annual Inspections)
+  description: Commercial inspections
   timeframe: 
 views:
   ago:

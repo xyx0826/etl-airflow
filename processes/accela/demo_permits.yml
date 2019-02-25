@@ -31,13 +31,22 @@ views:
               ) as address,
               par."B1_COUNCIL_DISTRICT" as council,
               par."B1_PARCEL_NBR" as parcel_number,
-              '' as area_parcel,
-              to_date(per."REC_DATE", 'dd-MON-YY') as permit_issue_date,
+              par."B1_PARCEL_AREA" as area_parcel,
+              to_date(proc."G6_STAT_DD", 'dd-MON-YY') as permit_issue_date,
               '' as permit_type,
-              '' as current_legal_use,
+              # '' as current_legal_use,
               chck."B1_CHECKLIST_COMMENT" as type_of_use,
               des."B1_WORK_DESC" as permit_description,
-              '' as estimate,
+              (
+                select
+                  "B1_CHECKLIST_COMMENT"
+                from
+                  bchckbox
+                where
+                  bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
+                  and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
+                  and bchckbox."B1_CHECKBOX_DESC_ALIAS" = 'Estimated Cost of Construction By Contractor/Homeowner'
+              ) as estimate,
               det."TOTAL_FEE" as fee_amount,
               det."BALANCE" as amount_due,
               det."TOTAL_PAY" as amount_paid,
