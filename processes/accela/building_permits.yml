@@ -32,7 +32,16 @@ views:
               ) as address,
               to_date(proc."G6_STAT_DD", 'dd-MON-YY') as permit_issue_date,
               '' as permit_type,
-              '' as current_legal_use,
+              (
+                select
+                  "B1_CHECKLIST_COMMENT"
+                from
+                  bchckbox
+                where
+                  bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
+                  and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
+                  and bchckbox."B1_CHECKBOX_DESC" = 'Type of Use'
+              ) as current_legal_use,
               '' as type_of_construction,
               chck."B1_CHECKLIST_COMMENT" as estimate,
               des."B1_WORK_DESC" as permit_description,

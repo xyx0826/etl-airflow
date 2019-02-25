@@ -44,16 +44,7 @@ views:
                   and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
                   and bchckbox."B1_CHECKBOX_DESC" = 'Type of Use'
               ) as type_of_use,
-              (
-                select
-                  "B1_CHECKLIST_COMMENT"
-                from
-                  bchckbox
-                where
-                  bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
-                  and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
-                  and bchckbox."B1_CHECKBOX_DESC" = 'Type of Use'
-              ) as type_of_work,
+              '' as type_of_work,
               des."B1_WORK_DESC" as permit_description,
               det."TOTAL_FEE" as fee_amount,
               det."BALANCE" as amount_due,
