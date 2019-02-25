@@ -16,7 +16,7 @@ views:
                 per."B1_PER_ID3"
               ) as accela_id,
               per."B1_ALT_ID" AS record_id,
-              per."B1_PER_TYPE",
+              # per."B1_PER_TYPE",
               initcap(
                 regexp_replace(
                   concat_ws(
@@ -31,8 +31,8 @@ views:
                   'g'
                 )
               ) as address,
-              des."B1_WORK_DESC" as description,
               proc."SD_APP_DES" as status,
+              des."B1_WORK_DESC" as description,
               (
                 select
                   "B1_CHECKLIST_COMMENT"
@@ -43,7 +43,8 @@ views:
                   and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
                   and bchckbox."B1_CHECKBOX_DESC_ALIAS" = 'Estimated Cost of Construction By Contractor/Homeowner'
               ) as estimated_cost,
-              par."B1_PARCEL_NBR" as parcel_number
+              par."B1_PARCEL_NBR" as parcel_number,
+              to_date(proc."G6_STAT_DD", 'dd-MON-YY') as issue_date
             from
               b1permit per
               left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
