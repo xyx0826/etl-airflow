@@ -13,7 +13,7 @@ views:
               regexp_replace(concat_ws(' ', addr."B1_HSE_NBR_START", addr."B1_STR_DIR", addr."B1_STR_NAME", addr."B1_STR_SUFFIX"), '\s{1,}', ' ') as address,
               p."B1_PARCEL_NBR" as parcel_number,
               addr."B1_SITUS_ZIP" as zip,
-              per."B1_APPL_STATUS" as status,
+              g."SD_APP_DES" as status,
               g."SD_PRO_DES" as task,
               to_date(per."REC_DATE", 'dd-MON-YY') as date_status
             FROM accela.b1permit per
