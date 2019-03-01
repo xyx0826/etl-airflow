@@ -50,3 +50,4 @@ views:
               and per."B1_PER_GROUP" = 'CodeEnforcement'
               and per."B1_PER_TYPE" in ('Inspections')
               and per."B1_PER_SUB_TYPE" = 'Residential'
+            order by to_date("G6_ACT_DD", 'dd-MON-YY') desc nulls last

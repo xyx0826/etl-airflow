@@ -116,3 +116,4 @@ views:
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
               and par."B1_PARCEL_STATUS" = 'A'
               and proc."SD_PRO_DES" = 'Permit Issuance'
+            order by to_date(proc."G6_STAT_DD", 'dd-MON-YY') desc

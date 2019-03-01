@@ -35,3 +35,4 @@ views:
               AND own."B1_PRIMARY_OWNER" = 'Y'
               and p."B1_PRIMARY_PAR_FLG" = 'Y'
               AND to_date(per."REC_DATE", 'dd-MON-YY') > date '2018-12-07'
+            ORDER BY to_date(g."G6_STAT_DD", 'dd-MON-YY') desc

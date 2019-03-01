@@ -15,7 +15,10 @@ views:
               addr."B1_SITUS_ZIP" as zip,
               g."SD_APP_DES" as status,
               g."SD_PRO_DES" as task,
-              to_date(per."REC_DATE", 'dd-MON-YY') as date_status
+              case 
+                when g."G6_STAT_DD" = '' then null
+                else to_date(g."G6_STAT_DD", 'dd-MON-YY') 
+              end as date_status
             FROM accela.b1permit per
               LEFT OUTER JOIN accela.b3addres addr ON per."B1_PER_ID1" = addr."B1_PER_ID1" 
                 AND per."B1_PER_ID3" = addr."B1_PER_ID3"
@@ -26,4 +29,5 @@ views:
               LEFT OUTER JOIN b3owners own ON own."B1_PER_ID1" = per."B1_PER_ID1" 
                 AND own."B1_PER_ID3" = per."B1_PER_ID3"
             WHERE g."SD_PRO_DES" in ('Issue CofC')
-              AND to_date(g."G6_STAT_DD", 'dd-MON-YY') > date '2018-12-15'
+              AND to_date(g."G6_STAT_DD", 'dd-MON-YY') > date '2018-12-08'
+            order by to_date(g."G6_STAT_DD", 'dd-MON-YY') desc

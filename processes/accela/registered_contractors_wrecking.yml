@@ -45,3 +45,4 @@ views:
                 and proc."B1_PER_ID3" = per."B1_PER_ID3"
             where per."B1_PER_SUB_TYPE" = 'WreckingContractor'
               AND proc."SD_PRO_DES" = 'License Issuance'
+            order by to_date(contr."B1_LAST_UPDATE_DD", 'dd-MON-YY') desc nulls last

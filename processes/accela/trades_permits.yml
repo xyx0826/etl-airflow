@@ -37,7 +37,6 @@ views:
               pa."B1_PARCEL_NBR" as parcel_no,
               pa."B1_LOT" as prc_lot,
               pa."B1_SUBDIVISION" as prc_subdiv,
-              # per."B1_PER_TYPE" as case_type,
               wd."B1_WORK_DESC" as case_description,
               pdt."TOTAL_FEE" as permit_fee,
               pdt."TOTAL_PAY" as amount_paid,
@@ -129,3 +128,4 @@ views:
               and o."B1_PRIMARY_OWNER" = 'Y'
               and a."B1_PRIMARY_ADDR_FLG" = 'Y'
               and per."B1_APPL_STATUS" = 'Permit Issued'
+            order by to_date(proc."G6_STAT_DD", 'dd-MON-YY') desc nulls last

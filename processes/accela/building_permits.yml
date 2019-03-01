@@ -14,7 +14,7 @@ views:
                 per."B1_PER_ID1",
                 per."B1_PER_ID2",
                 per."B1_PER_ID3"
-              ),
+              ) as accela_id,
               per."B1_ALT_ID" as record_id,
               initcap(
                 regexp_replace(
@@ -123,3 +123,4 @@ views:
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
               and chck."B1_CHECKBOX_DESC_ALT" = 'Estimated Cost of Construction By Contractor/Homeowner'
               and proc."SD_PRO_DES" = 'Permit Issuance'
+            order by to_date(proc."G6_STAT_DD", 'dd-MON-YY') desc

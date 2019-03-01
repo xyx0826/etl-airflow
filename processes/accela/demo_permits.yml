@@ -34,7 +34,6 @@ views:
               par."B1_PARCEL_AREA" as area_parcel,
               to_date(proc."G6_STAT_DD", 'dd-MON-YY') as permit_issue_date,
               '' as permit_type,
-              # '' as current_legal_use,
               chck."B1_CHECKLIST_COMMENT" as type_of_use,
               des."B1_WORK_DESC" as permit_description,
               (
@@ -112,5 +111,5 @@ views:
               and per."B1_APPL_STATUS" = 'Issued'
               and own."B1_PRIMARY_OWNER" = 'Y'
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
-              and proc."SD_PRO_DES" = 'Permit Issuance';
-              
+              and proc."SD_PRO_DES" = 'Permit Issuance'
+            order by to_date(proc."G6_STAT_DD", 'dd-MON-YY') desc

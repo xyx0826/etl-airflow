@@ -44,8 +44,9 @@ views:
               left outer join g6action act on act."B1_PER_ID1" = per."B1_PER_ID1"
               and act."B1_PER_ID3" = per."B1_PER_ID3"
             where
-              to_date("G6_ACT_DD", 'dd-MON-YY') > '2019-01-01'
+              to_date("G6_ACT_DD", 'dd-MON-YY') > '2018-12-08'
               and act."G6_ACT_GRP" = 'Inspection'
               and per."B1_PER_GROUP" = 'CodeEnforcement'
               and per."B1_PER_TYPE" in ('Inspections')
               and per."B1_PER_SUB_TYPE" = 'Commercial'
+            order by to_date("G6_ACT_DD", 'dd-MON-YY') desc
