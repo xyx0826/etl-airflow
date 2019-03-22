@@ -3,6 +3,7 @@ import datetime as dt
 import os, re, yaml
 from common import sources
 from common import destinations
+from common import spatial
 
 from airflow.models import Variable
 
@@ -31,6 +32,19 @@ with DAG('dah',
     opr_transform = BashOperator(
         task_id='transform',
         bash_command=f"psql -d etl -f {os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/blight_violations.sql"
+    )
+
+    opr_geocode = PythonOperator(
+        task_id='geocode',
+        python_callable=spatial.geocode_rows,
+        op_kwargs = {
+            "table": f"{dag.dag_id}.bvn",
+            "address_column": "violation_address",
+            "geometry_column": "geom",
+            "parcel_column": "parcelno",
+            "where": "parcelno is null",
+            "geocoder": 'address'
+        }
     )
 
     sources_to_extract = yaml.load(open(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/_sources.yml"))
@@ -63,9 +77,20 @@ with DAG('dah',
             v['name'] = f"{od_name}_{d}"
             v['dag'] = dag.dag_id
 
+            # make view after geocoding & set downstream of dump_file
+            opr_make_view = PostgresOperator(
+                task_id=f"make_view_{v['name']}",
+                sql=["set search_path to accela", f"create or replace view {v['dag'] + '.' + v['name']} as ({v['select']})"],
+                postgres_conn_id='etl_postgres'
+            )
+
+            opr_transform.set_downstream(opr_geocode)
+            opr_geocode.set_downstream(opr_make_view)
+
             # get appropriate Operator & set downstream of make_view
             opr_dump_file = destinations.pg_to_file(v)
-            opr_transform.set_downstream(opr_dump_file)
+            
+            opr_make_view.set_downstream(opr_dump_file)
 
             if v['export'] == 'shapefile':
                 filepath = f"/tmp/{v['name']}.zip"
@@ -83,6 +108,6 @@ with DAG('dah',
                     }
                 )
             
-            opr_dump_file.set_downstream(opr_upload)
+                opr_dump_file.set_downstream(opr_upload)
 
 opr_wait >> opr_transform

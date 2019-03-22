@@ -4,6 +4,6 @@ metadata:
 views:
   ago:
     destination: ago
-    id: e9de847b6f384788813b0b2685b426cb
-    export: geojson
+    id: a92f58700bb44f95852f108061af8ec6
+    export: shapefile
     select: select * from dah.bvn

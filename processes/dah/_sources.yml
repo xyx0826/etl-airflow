@@ -1,50 +1,50 @@
 payments:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblDAHPayments
 ztickets:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblZTickets
   where: (('2000-01-01' < "IssueDate" and "IssueDate" < '2025-01-01') or "IssueDate" is null)
 dispadjourn:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblDispAdjourn
 cityfines:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblDAHCityFines
 blight_ticket_svc_cost:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblDAHBlightTicketServiceCostTransactions
 reschedule:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblReSchedule
   where: (('2000-01-01' < "ProcessDate" and "ProcessDate" < '2025-01-01') or "ProcessDate" is null)
 courttime:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblCourtTime
 agency:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblAgency
 ordinance:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblDAHOrdinance
 streets:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblStreets
 violator_address:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblDAHViolatorAddress
 state:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblState
 violator_info:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblDAHViolatorInfo
 security:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblSecurity
 country:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblDAHCountry
 disp_type:
-  connection: dah_database
+  connection: mssql_dah
   source_name: SWEETSpower.tblDAHDispType

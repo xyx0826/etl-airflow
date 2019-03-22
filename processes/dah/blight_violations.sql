@@ -41,6 +41,8 @@ create table dah.bvn (
   parcelno text
 );
 
+select addgeometrycolumn('dah', 'bvn', 'geom', 4326, 'POINT', 2);
+
 -- add indices on helper tables. speeds up ze joins
 create index if not exists dah_bvn_zticket_idx on dah.bvn using btree(ticket_id);
 create index if not exists dah_ztickets_zticketid_idx on dah.ztickets using btree("ZTicketID");
@@ -234,7 +236,7 @@ update dah.bvn j
 
 -- create violation address
 update dah.bvn j 
-  set violation_address = concat_ws(' ', violation_street_number, violation_street_name);
+  set violation_address = trim(concat_ws(' ', violation_street_number, violation_street_name));
 
 -- join on parcel address (geocode in future bc dah addresses often lack direction)
 create index if not exists dah_bvn_violation_address_idx on dah.bvn using btree(violation_address);
@@ -251,6 +253,7 @@ update dah.bvn
     balance_due = 0 
   where hearing_date > NOW();
 
--- create view for AGO
--- drop view if exists dah.bvn_ago cascade;
--- create view dah.bvn_ago as select * from dah.bvn;
+-- join violation address to address points to set parcelno before geocoding
+update dah.bvn b set parcelno = ap.parcel_id, geom = st_transform(ap.geom, 4326)
+	from address.address_points ap 
+	where ap.house_number = trim(b.violation_street_number) and ap.street_name like trim(b.violation_street_name) || '%';
