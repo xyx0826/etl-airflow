@@ -9,7 +9,7 @@ rename -v 's/\d{12}_([_A-Z1-9]{1,})_[_\dA-Za-z-\]\[]{1,}/\1_original/' *.txt
 # b1permit
 cat B1PERMIT_original.txt | iconv -f latin1 -t utf8 | tr '\n' ' ' | sed 's/DETROIT|/\'$'\nDETROIT|/g' | sed 's/|/"|"/g' | sed 's/^/"/g' | sed 's/ $/"/g' >> B1PERMIT_fixed.txt
 # b3addres - don't split
-cat B3ADDRES_original.txt | iconv -f latin1 -t utf8 | sed 's/|/"|"/g' | sed 's/^/"/g' | sed 's/ $/"/g' >> B3ADDRES_fixed.txt
+cat B3ADDRES_original.txt | iconv -f latin1 -t utf8 | sed 's/|/"|"/g' | sed 's/^/"/g' | sed 's/$/"/g' >> B3ADDRES_fixed.txt
 # b1_expiration
 cat B1_EXPIRATION_original.txt | iconv -f latin1 -t utf8 | tr '\n' ' ' | sed 's/DETROIT|/\'$'\nDETROIT|/g' | sed 's/|/"|"/g' | sed 's/^/"/g' | sed 's/ $/"/g' >> B1_EXPIRATION.txt
 # b3contact
