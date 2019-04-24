@@ -4,17 +4,12 @@ metadata:
   description: All building permits issued by BSEED
   timeframe: 
 views:
-  ago:
-    destination: ago
-    id: 
+  socrata:
+    destination: socrata
+    id: j3sa-n4ks
+    method: replace
     export: shapefile
-    select: select
-              concat_ws(
-                '-',
-                per."B1_PER_ID1",
-                per."B1_PER_ID2",
-                per."B1_PER_ID3"
-              ) as accela_id,
+    select: select distinct on (per."B1_ALT_ID")
               per."B1_ALT_ID" as record_id,
               initcap(
                 regexp_replace(
@@ -30,7 +25,7 @@ views:
                   'g'
                 )
               ) as address,
-              to_date(proc."G6_STAT_DD", 'dd-MON-YY') as permit_issue_date,
+              makeSocrataDate(proc."G6_STAT_DD") as permit_issue_date,
               '' as permit_type,
               (
                 select
@@ -41,31 +36,23 @@ views:
                   bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
                   and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
                   and bchckbox."B1_CHECKBOX_DESC" = 'Type of Use'
+                  limit 1
               ) as current_legal_use,
               '' as type_of_construction,
-              chck."B1_CHECKLIST_COMMENT" as estimate,
+              (
+                select
+                  "B1_CHECKLIST_COMMENT"
+                from
+                  bchckbox
+                where
+                  bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
+                  and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
+                  and bchckbox."B1_CHECKBOX_DESC_ALT" = 'Estimated Cost of Construction By Contractor/Homeowner'
+                  limit 1
+              ) as estimate,
               des."B1_WORK_DESC" as permit_description,
-              det."TOTAL_FEE" as fee_amount,
-              det."BALANCE" as amount_due,
               det."TOTAL_PAY" as amount_paid,
               own."B1_OWNER_FULL_NAME" as owner_name,
-              regexp_replace(
-                concat_ws(
-                  ', ',
-                  own."B1_MAIL_ADDRESS1",
-                  own."B1_MAIL_ADDRESS2",
-                  own."B1_MAIL_ADDRESS3",
-                  own."B1_MAIL_CITY",
-                  own."B1_MAIL_STATE",
-                  own."B1_MAIL_ZIP",
-                  own."B1_MAIL_COUNTRY"
-                ),
-                '[\s,]{1,}',
-                ' ',
-                'g'
-              ) as owner_address,
-              own."B1_PHONE" as owner_telephone,
-              own."B1_EMAIL" as owner_email,
               contr."B1_BUS_NAME" as contractor_name,
               regexp_replace(
                 concat_ws(
@@ -84,10 +71,10 @@ views:
               contr."B1_PHONE1" as contractor_phone,
               proc."SD_APP_DES" as status,
               proc."SD_PRO_DES" as task,
-              par."B1_COUNCIL_DISTRICT" as council,
-              det."B1_COMPLETE_DATE" as date_completed,
-              exp."EXPIRATION_DATE" as date_expiration,
-              par."B1_PARCEL_NBR" as parcel_number,
+              case when trim(par."B1_COUNCIL_DISTRICT")::text = '' then null else par."B1_COUNCIL_DISTRICT" end as council,
+              makeSocrataDate(det."B1_COMPLETE_DATE") as date_completed,
+              makeSocrataDate(exp."EXPIRATION_DATE") as date_expiration,
+              accela.clean_pnum(par."B1_PARCEL_NBR") as parcel_number,
               par."B1_PARCEL_AREA" as area_parcel
             from
               b1permit per
@@ -101,8 +88,6 @@ views:
               and des."B1_PER_ID3" = per."B1_PER_ID3"
               left outer join bpermitdetail det on det."B1_PER_ID1" = per."B1_PER_ID1"
               and det."B1_PER_ID3" = per."B1_PER_ID3"
-              left outer join bchckbox chck on chck."B1_PER_ID1" = per."B1_PER_ID1"
-              and chck."B1_PER_ID3" = per."B1_PER_ID3"
               left outer join b3contra contr on contr."B1_PER_ID1" = per."B1_PER_ID1"
               and contr."B1_PER_ID3" = per."B1_PER_ID3"
               left outer join gprocess proc on proc."B1_PER_ID1" = per."B1_PER_ID1"
@@ -110,7 +95,7 @@ views:
               left outer join b1expiration exp on exp."B1_PER_ID1" = per."B1_PER_ID1"
               and exp."B1_PER_ID3" = per."B1_PER_ID3"
             where
-              to_date(per."REC_DATE", 'dd-MON-YY') >= '2018-12-08'
+              per."REC_DATE"::timestamp >= '2019-02-01'
               and per."B1_PER_GROUP" = 'Permits'
               and per."B1_PER_TYPE" in (
                 'Building',
@@ -121,6 +106,6 @@ views:
               and per."B1_APPL_STATUS" = 'Issued'
               and own."B1_PRIMARY_OWNER" = 'Y'
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
-              and chck."B1_CHECKBOX_DESC_ALT" = 'Estimated Cost of Construction By Contractor/Homeowner'
+              and par."B1_PRIMARY_PAR_FLG" = 'Y'
               and proc."SD_PRO_DES" = 'Permit Issuance'
-            order by to_date(proc."G6_STAT_DD", 'dd-MON-YY') desc
+              and proc."SD_APP_DES" = 'Issued'

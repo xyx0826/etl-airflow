@@ -4,18 +4,13 @@ metadata:
   description: Residential inspections
   timeframe: 
 views:
-  ago:
-    destination: ago
-    id: 
-    export: shapefile
+  socrata:
+    destination: socrata
+    id: nna2-7cpn
+    method: replace
     select: select
-              concat_ws(
-                '-',
-                per."B1_PER_ID1",
-                per."B1_PER_ID2",
-                per."B1_PER_ID3"
-              ),
               per."B1_ALT_ID" as record_id,
+              own."B1_OWNER_FULL_NAME" as owner_name,
               initcap(
                 regexp_replace(
                   concat_ws(
@@ -32,10 +27,10 @@ views:
               ) as address,
               addr."B1_SITUS_ZIP" as zip,
               act."G6_ACT_TYP" as inspection_type,
-              to_date("G6_ACT_DD", 'dd-MON-YY') as scheduled_date,
-              to_date(act."G6_COMPL_DD", 'dd-MON-YY') as date_inspection,
+              makeSocrataDate("G6_ACT_DD") as scheduled_date,
+              makeSocrataDate(act."G6_COMPL_DD") as date_inspection,
               act."G6_STATUS" as result,
-              par."B1_PARCEL_NBR" as parcel_number
+              accela.clean_pnum(par."B1_PARCEL_NBR") as parcel_number
             from
               b1permit per
               left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
@@ -44,10 +39,13 @@ views:
               and par."B1_PER_ID3" = per."B1_PER_ID3"
               left outer join g6action act on act."B1_PER_ID1" = per."B1_PER_ID1"
               and act."B1_PER_ID3" = per."B1_PER_ID3"
+              left outer join b3owners own on own."B1_PER_ID1" = per."B1_PER_ID1"
+              and own."B1_PER_ID3" = per."B1_PER_ID3"
             where
-              to_date("G6_ACT_DD", 'dd-MON-YY') > '2019-01-01'
+              "G6_ACT_DD" != ''
+              and "G6_ACT_DD"::timestamp > '2019-01-01'
               and act."G6_ACT_GRP" = 'Inspection'
+              and own."B1_PRIMARY_OWNER" = 'Y'
               and per."B1_PER_GROUP" = 'CodeEnforcement'
               and per."B1_PER_TYPE" in ('Inspections')
               and per."B1_PER_SUB_TYPE" = 'Residential'
-            order by to_date("G6_ACT_DD", 'dd-MON-YY') desc nulls last

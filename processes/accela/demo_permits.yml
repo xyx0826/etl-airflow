@@ -3,17 +3,12 @@ metadata:
   description: Demolition permits issued by BSEED
   timeframe: 
 views:
-  ago:
-    destination: ago
-    id: 
-    export: shapefile
+  socrata:
+    destination: socrata
+    id: gxt7-3br7
+    method: replace
     select: select
-              concat_ws(
-                '-',
-                per."B1_PER_ID1",
-                per."B1_PER_ID2",
-                per."B1_PER_ID3"
-              ) as accela_id,
+      distinct on (per."B1_ALT_ID")
               per."B1_ALT_ID" as record_id,
               initcap(
                 regexp_replace(
@@ -30,11 +25,11 @@ views:
                 )
               ) as address,
               par."B1_COUNCIL_DISTRICT" as council,
-              par."B1_PARCEL_NBR" as parcel_number,
+              accela.clean_pnum(par."B1_PARCEL_NBR") as parcel_number,
               par."B1_PARCEL_AREA" as area_parcel,
-              to_date(proc."G6_STAT_DD", 'dd-MON-YY') as permit_issue_date,
+              makeSocrataDate(proc."G6_STAT_DD") as permit_issue_date,
               '' as permit_type,
-              chck."B1_CHECKLIST_COMMENT" as type_of_use,
+              '' as type_of_use,
               des."B1_WORK_DESC" as permit_description,
               (
                 select
@@ -46,27 +41,9 @@ views:
                   and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
                   and bchckbox."B1_CHECKBOX_DESC_ALIAS" = 'Estimated Cost of Construction By Contractor/Homeowner'
               ) as estimate,
-              det."TOTAL_FEE" as fee_amount,
               det."BALANCE" as amount_due,
               det."TOTAL_PAY" as amount_paid,
               own."B1_OWNER_FULL_NAME" as owner_name,
-              regexp_replace(
-                concat_ws(
-                  ', ',
-                  own."B1_MAIL_ADDRESS1",
-                  own."B1_MAIL_ADDRESS2",
-                  own."B1_MAIL_ADDRESS3",
-                  own."B1_MAIL_CITY",
-                  own."B1_MAIL_STATE",
-                  own."B1_MAIL_ZIP",
-                  own."B1_MAIL_COUNTRY"
-                ),
-                '[\s,]{1,}',
-                ' ',
-                'g'
-              ) as owner_address,
-              own."B1_PHONE" as owner_telephone,
-              own."B1_EMAIL" as owner_email,
               contr."B1_BUS_NAME" as contractor_name,
               regexp_replace(
                 concat_ws(
@@ -98,18 +75,17 @@ views:
               and des."B1_PER_ID3" = per."B1_PER_ID3"
               left outer join bpermitdetail det on det."B1_PER_ID1" = per."B1_PER_ID1"
               and det."B1_PER_ID3" = per."B1_PER_ID3"
-              left outer join bchckbox chck on chck."B1_PER_ID1" = per."B1_PER_ID1"
-              and chck."B1_PER_ID3" = per."B1_PER_ID3"
               left outer join b3contra contr on contr."B1_PER_ID1" = per."B1_PER_ID1"
               and contr."B1_PER_ID3" = per."B1_PER_ID3"
               left outer join gprocess proc on proc."B1_PER_ID1" = per."B1_PER_ID1"
               and proc."B1_PER_ID3" = per."B1_PER_ID3"
             where
-              to_date(per."REC_DATE", 'dd-MON-YY') >= '2018-12-08'
+              per."REC_DATE"::timestamp >= '2018-12-08'
               and per."B1_PER_GROUP" = 'Permits'
               and per."B1_PER_TYPE" = 'Demolition'
               and per."B1_APPL_STATUS" = 'Issued'
               and own."B1_PRIMARY_OWNER" = 'Y'
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
+              and par."B1_PRIMARY_PAR_FLG" = 'Y'
               and proc."SD_PRO_DES" = 'Permit Issuance'
-            order by to_date(proc."G6_STAT_DD", 'dd-MON-YY') desc
+              and proc."SD_APP_DES" = 'Issued'

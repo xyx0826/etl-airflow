@@ -2,10 +2,10 @@ metadata:
   name: Vacant Property Registration
   description: All VPO registrations processed by BSEED
 views:
-  ago:
-    destination: ago
-    id:
-    format: shapefile
+  socrata:
+    destination: socrata
+    id: 5akz-4z5e
+    method: replace
     select: select
               per."B1_ALT_ID" as record_id,
               proc."SD_PRO_DES" as task,
@@ -24,8 +24,8 @@ views:
               ) as address,
               addr."B1_SITUS_ZIP" as zip_code,
               own."B1_OWNER_FULL_NAME" as primary_name,
-              to_date(proc."G6_STAT_DD", 'dd-MON-YY') as record_status_date,
-              to_date(exp."EXPIRATION_DATE", 'dd-MON-YY') as expiration_date
+              makeSocrataDate(proc."G6_STAT_DD") as record_status_date,
+              makeSocrataDate(exp."EXPIRATION_DATE") as expiration_date
             from
               b1permit per
               left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
@@ -37,11 +37,10 @@ views:
               left outer join b1expiration exp on exp."B1_PER_ID1" = per."B1_PER_ID1"
               and exp."B1_PER_ID3" = per."B1_PER_ID3"
             where
-              to_date(per."REC_DATE", 'dd-MON-YY') >= '2018-12-15'
+              per."REC_DATE"::timestamp >= '2018-12-15'
               and per."B1_PER_GROUP" = 'CodeEnforcement'
               and per."B1_PER_TYPE" = 'Inspections'
               and per."B1_PER_SUB_TYPE" = 'Vacant'
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
               and own."B1_PRIMARY_OWNER" = 'Y'
               and proc."SD_PRO_DES" = 'Issue Registration'
-            order by to_date(proc."G6_STAT_DD", 'dd-MON-YY') desc

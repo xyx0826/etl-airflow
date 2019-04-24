@@ -4,21 +4,16 @@ metadata:
   description: All trades permits issued by BSEED
   timeframe: 
 views:
-  ago:
-    destination: ago
-    id: 
-    export: shapefile
+  socrata:
+    destination: socrata
+    id: yj57-3xkk
+    method: replace
     select: select
+              distinct on (per."B1_ALT_ID")
               per."B1_ALT_ID" as permit_no,
-              concat_ws(
-                ' ',
-                per."B1_PER_ID1",
-                per."B1_PER_ID2",
-                per."B1_PER_ID3"
-              ) as accela_id,
-              to_date(proc."G6_STAT_DD", 'dd-MON-YY') as permit_issued,
-              e."EXPIRATION_DATE" as permit_expire,
-              pdt."B1_COMPLETE_DATE" as permit_completed,
+              makeSocrataDate(proc."G6_STAT_DD") as permit_issued,
+              makeSocrataDate(e."EXPIRATION_DATE") as permit_expire,
+              makeSocrataDate(pdt."B1_COMPLETE_DATE") as permit_completed,
               proc."SD_APP_DES" as permit_status,
               initcap(
                 regexp_replace(
@@ -34,16 +29,13 @@ views:
                   'g'
                 )
               ) as address,
-              pa."B1_PARCEL_NBR" as parcel_no,
+              accela.clean_pnum(pa."B1_PARCEL_NBR") as parcel_no,
               pa."B1_LOT" as prc_lot,
               pa."B1_SUBDIVISION" as prc_subdiv,
-              wd."B1_WORK_DESC" as case_description,
-              pdt."TOTAL_FEE" as permit_fee,
-              pdt."TOTAL_PAY" as amount_paid,
               pdt."BALANCE" as amount_due,
               pa."B1_PARCEL_AREA" as parcel_size,
               pa."B1_SUPERVISOR_DISTRICT" as parcel_cluster_sector,
-              pa."B1_PLAN_AREA" as parcel_floor_area,
+              case when pa."B1_PLAN_AREA" = '' then null else pa."B1_PLAN_AREA" end as parcel_floor_area,
               (
                 select
                   "B1_CHECKLIST_COMMENT"
@@ -53,6 +45,7 @@ views:
                   bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
                   and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
                   and bchckbox."B1_CHECKBOX_DESC" = 'Type of Use'
+                  limit 1
               ) as type_of_use,
               (
                 select
@@ -63,24 +56,9 @@ views:
                   bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
                   and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
                   and bchckbox."B1_CHECKBOX_DESC" = 'Type of Work'
+                  limit 1
               ) as type_of_work,
-              pdt."B1_CREATED_BY" as csf_created_by,
-              o."B1_OWNER_FULL_NAME" as owner_name,
-              regexp_replace(
-                concat_ws(
-                  ', ',
-                  o."B1_MAIL_ADDRESS1",
-                  o."B1_MAIL_ADDRESS2",
-                  o."B1_MAIL_ADDRESS3",
-                  o."B1_MAIL_CITY",
-                  o."B1_MAIL_STATE",
-                  o."B1_MAIL_ZIP",
-                  o."B1_MAIL_COUNTRY"
-                ),
-                '[\s,]{1,}',
-                ' ',
-                'g'
-              ) as owner_address,              
+              o."B1_OWNER_FULL_NAME" as owner_name,             
               c."B1_CAE_LNAME" as contractor_last_name,
               regexp_replace(
                 concat_ws(
@@ -123,9 +101,9 @@ views:
                 'Elevator',
                 'Plumbing'
               )
-              and to_date(per."REC_DATE", 'dd-MON-YY') > '2019-01-01'
+              and per."REC_DATE"::timestamp > '2019-01-01'
               and pa."B1_PRIMARY_PAR_FLG" = 'Y'
               and o."B1_PRIMARY_OWNER" = 'Y'
               and a."B1_PRIMARY_ADDR_FLG" = 'Y'
               and per."B1_APPL_STATUS" = 'Permit Issued'
-            order by to_date(proc."G6_STAT_DD", 'dd-MON-YY') desc nulls last
+              and proc."SD_APP_DES" = 'Issued'

@@ -3,10 +3,10 @@ metadata:
   description: Wrecking contractors who are registered with BSEED
   timeframe: 
 views:
-  ago:
-    destination: ago
-    id: 
-    export: shapefile
+  socrata:
+    destination: socrata
+    id: jfu2-2cpi
+    method: replace
     select: select
               contr."B1_LICENSE_NBR" as license_number,
               per."B1_PER_SUB_TYPE" as sub_type,
@@ -18,13 +18,11 @@ views:
               contr."B1_CITY" as city,
               contr."B1_STATE" as state,
               contr."B1_ZIP" as zip,
-              contr."B1_BUS_LIC" as business_license_number,
               contr."B1_BUS_NAME" as business_name,
               contr."B1_BUS_NAME2" as business_name_two,
-              contr."B1_COMMENT" as comments,
-              to_date(contr."B1_LIC_EXPIR_DD", 'dd-MON-YY') as license_expiration,
-              to_date(contr."B1_LAST_UPDATE_DD", 'dd-MON-YY') as license_issued,
-              to_date(contr."B1_LAST_RENEWAL_DD", 'dd-MON-YY') as license_renewed,
+              makeSocrataDate(contr."B1_LIC_EXPIR_DD") as license_expiration,
+              makeSocrataDate(contr."B1_LAST_UPDATE_DD") as license_issued,
+              makeSocrataDate(contr."B1_LAST_RENEWAL_DD") as license_renewed,
               proc."SD_APP_DES" as status
             from b1permit per
               left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
@@ -45,4 +43,4 @@ views:
                 and proc."B1_PER_ID3" = per."B1_PER_ID3"
             where per."B1_PER_SUB_TYPE" = 'WreckingContractor'
               AND proc."SD_PRO_DES" = 'License Issuance'
-            order by to_date(contr."B1_LAST_UPDATE_DD", 'dd-MON-YY') desc nulls last
+            order by contr."B1_LAST_UPDATE_DD"::timestamp desc nulls last

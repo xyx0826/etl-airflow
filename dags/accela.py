@@ -13,6 +13,8 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.operators.bash_operator import BashOperator
 
+from common import destinations
+
 default_args = {
     'owner': 'airflow',
     'start_date': dt.datetime(2019, 1, 2, 00, 00, 00),
@@ -64,33 +66,11 @@ with DAG('accela',
     default_args=default_args,
     schedule_interval="0 1 * * *") as dag:
 
-    # Retrieve files from FTP
-    opr_retrieve_files = PythonOperator(
-        task_id='get_ftp_files',
-        provide_context=True,
-        python_callable=get_ftp_files,
-    )
-
     opr_pause = BashOperator(
         task_id='post_extract_pause',
         bash_command="echo 'Stay cool.'"
     )
-
-    # Create Postgres tables
-    for t in tables:
-        opr_make_pgtables = PythonOperator(
-            task_id='csv_to_pg_'+t.lower().replace('_',''),
-            provide_context=True,
-            python_callable=csv_to_pg,
-            op_kwargs={
-                "name": t,
-            }
-        )
-
-        opr_make_pgtables.set_upstream(opr_retrieve_files)
-        opr_pause.set_upstream(opr_make_pgtables)
     
-
     open_datasets = [ f for f in os.listdir(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}") if not f.startswith('_')]
 
     for od in open_datasets:
@@ -106,18 +86,46 @@ with DAG('accela',
             # Make view & set downstream of opr_pause
             opr_make_view = PostgresOperator(
                 task_id=f"make_view_{v['name']}",
-                sql=f"create or replace view {v['dag'] + '.' + v['name']} as ({v['select']})",
+                sql=["set search_path to accela", f"drop view {v['dag']}.{v['name']}", f"create or replace view {v['dag'] + '.' + v['name']} as ({v['select']})"],
                 postgres_conn_id='etl_postgres'
             )
             opr_pause.set_downstream(opr_make_view)
 
-            opr_csv_dump = PostgresOperator(
-                task_id=f"dump_to_csv_{v['name']}",
-                sql=f"COPY (select * from {v['dag'] + '.' + v['name']}) TO '/tmp/{v['name']}.csv' WITH (FORMAT CSV, HEADER);",
-                postgres_conn_id='etl_postgres'
-            )
+            if 'id' in v.keys() and v['id'] != None:
+                opr_socrata_upload = PythonOperator(
+                    task_id=f"upload_{v['name']}",
+                    python_callable=destinations.upload_to_socrata,
+                    provide_context=True,
+                    op_kwargs={
+                        "id": v['id'],
+                        "method": v['method'],
+                        "table": v['dag'] + '.' + v['name']
+                    }
+                )
+                opr_make_view.set_downstream(opr_socrata_upload)
 
-            opr_make_view.set_downstream(opr_csv_dump)
+            
+
+
+
+
+
+            # opr_csv_dump = PostgresOperator(
+            #     task_id=f"dump_to_csv_{v['name']}",
+            #     sql=f"""COPY (select distinct * from {v['dag'] + '.' + v['name']}) TO '/tmp/{v['name']}.csv' WITH (FORMAT CSV, FORCE_QUOTE *, QUOTE '"', HEADER);""",
+            #     postgres_conn_id='etl_postgres'
+            # )
+
+            # opr_make_view.set_downstream(opr_csv_dump)
+
+            # opr_fix_dupes = BashOperator(
+            #     task_id=f"dedupe_rows_{v['name']}",
+            #     bash_command=f"cat /tmp/{v['name']}.csv | awk '!seen[$0]++' >| /tmp/accela_extract/{v['name']}_deduped.csv",
+            # )
+
+            # opr_csv_dump.set_downstream(opr_fix_dupes)
+
+
 
     # TBD Insert daily updates into master tables
 

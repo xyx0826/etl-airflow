@@ -4,17 +4,11 @@ metadata:
   description: All electric/fire alarm permits issued by BSEED
   timeframe: 
 views:
-  ago:
-    destination: ago
-    id: 
-    export: shapefile
+  socrata:
+    destination: socrata
+    id: s6zr-xnsv
+    method: replace
     select: select
-              concat_ws(
-                '-',
-                per."B1_PER_ID1",
-                per."B1_PER_ID2",
-                per."B1_PER_ID3"
-              ),
               per."B1_ALT_ID" as record_id,
               initcap(
                 regexp_replace(
@@ -30,7 +24,7 @@ views:
                   'g'
                 )
               ) as address,
-              to_date(proc."G6_STAT_DD", 'dd-MON-YY') as permit_issue_date,
+              makeSocrataDate(proc."G6_STAT_DD") as permit_issue_date,
               '' as permit_type,
               '' as current_legal_use,
               '' as type_of_construction,
@@ -43,30 +37,12 @@ views:
                   bchckbox."B1_PER_ID1" = per."B1_PER_ID1"
                   and bchckbox."B1_PER_ID3" = per."B1_PER_ID3"
                   and bchckbox."B1_CHECKBOX_DESC" = 'Type of Use'
+                  limit 1
               ) as type_of_use,
               '' as type_of_work,
               des."B1_WORK_DESC" as permit_description,
               det."TOTAL_FEE" as fee_amount,
-              det."BALANCE" as amount_due,
-              det."TOTAL_PAY" as amount_paid,
               own."B1_OWNER_FULL_NAME" as owner_name,
-              regexp_replace(
-                concat_ws(
-                  ', ',
-                  own."B1_MAIL_ADDRESS1",
-                  own."B1_MAIL_ADDRESS2",
-                  own."B1_MAIL_ADDRESS3",
-                  own."B1_MAIL_CITY",
-                  own."B1_MAIL_STATE",
-                  own."B1_MAIL_ZIP",
-                  own."B1_MAIL_COUNTRY"
-                ),
-                '[\s,]{1,}',
-                ' ',
-                'g'
-              ) as owner_address,
-              own."B1_PHONE" as owner_telephone,
-              own."B1_EMAIL" as owner_email,
               contr."B1_BUS_NAME" as contractor_name,
               regexp_replace(
                 concat_ws(
@@ -85,11 +61,11 @@ views:
               contr."B1_PHONE1" as contractor_phone,
               proc."SD_APP_DES" as status,
               proc."SD_PRO_DES" as task,
-              par."B1_COUNCIL_DISTRICT" as council,
-              det."B1_COMPLETE_DATE" as date_completed,
-              exp."EXPIRATION_DATE" as date_expiration,
-              par."B1_PARCEL_NBR" as parcel_number,
-              par."B1_PARCEL_AREA" as area_parcel
+              case when trim(par."B1_COUNCIL_DISTRICT") = '' then null else par."B1_COUNCIL_DISTRICT" end as council,
+              makeSocrataDate(det."B1_COMPLETE_DATE") as date_completed,
+              makeSocrataDate(exp."EXPIRATION_DATE") as date_expiration,
+              accela.clean_pnum(par."B1_PARCEL_NBR") as parcel_number,
+              case when trim(par."B1_PARCEL_AREA") = '' then null else par."B1_PARCEL_AREA" end as area_parcel
             from
               b1permit per
               left outer join b3addres addr on addr."B1_PER_ID1" = per."B1_PER_ID1"
@@ -109,11 +85,10 @@ views:
               left outer join b1expiration exp on exp."B1_PER_ID1" = per."B1_PER_ID1"
               and exp."B1_PER_ID3" = per."B1_PER_ID3"
             where
-              to_date(per."REC_DATE", 'dd-MON-YY') >= '2019-01-01'
+              per."REC_DATE"::timestamp >= '2019-01-01'
               and per."B1_PER_GROUP" = 'Permits'
               and per."B1_PER_TYPE" in ('Electrical', 'FireAlarm')
               and own."B1_PRIMARY_OWNER" = 'Y'
               and addr."B1_PRIMARY_ADDR_FLG" = 'Y'
               and par."B1_PARCEL_STATUS" = 'A'
               and proc."SD_PRO_DES" = 'Permit Issuance'
-            order by to_date(proc."G6_STAT_DD", 'dd-MON-YY') desc

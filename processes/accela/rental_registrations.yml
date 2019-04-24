@@ -3,21 +3,21 @@ metadata:
   description: Rental properties that are registered through BSEED
   timeframe: 
 views:
-  ago:
-    destination: ago
-    id: 
-    export: shapefile
+  socrata:
+    destination: socrata
+    id: ksj2-4v7e
+    method: replace
     select: select
               per."B1_ALT_ID" as record_id,
               g."SD_PRO_DES" as task,
               regexp_replace(concat_ws(' ', addr."B1_HSE_NBR_START", addr."B1_STR_DIR", addr."B1_STR_NAME", addr."B1_STR_SUFFIX"), '\s{1,}', ' ') as rental_address,
-              p."B1_PARCEL_NBR" as parcel_number,
+              accela.clean_pnum(p."B1_PARCEL_NBR") as parcel_number,
               addr."B1_SITUS_ZIP" as rental_zip,
               per."B1_APP_TYPE_ALIAS" as record_type,
               '' as units,
               own."B1_OWNER_FULL_NAME" as owner_name,
               regexp_replace(concat_ws(' ', own."B1_MAIL_ADDRESS1", own."B1_MAIL_ADDRESS2", own."B1_MAIL_ADDRESS3", own."B1_MAIL_CITY", own."B1_MAIL_STATE", own."B1_MAIL_ZIP", own."B1_MAIL_COUNTRY"), '/s{1,4}', '/s', 'g') as owner_address,
-              to_date(g."G6_STAT_DD", 'dd-MON-YY') as issued_date
+              makeSocrataDate(g."G6_STAT_DD") as issued_date
             FROM accela.b1permit per
               LEFT OUTER JOIN accela.b3addres addr ON per."B1_PER_ID1" = addr."B1_PER_ID1" 
                 AND per."B1_PER_ID3" = addr."B1_PER_ID3"
@@ -34,5 +34,4 @@ views:
               AND addr."B1_PRIMARY_ADDR_FLG" = 'Y'
               AND own."B1_PRIMARY_OWNER" = 'Y'
               and p."B1_PRIMARY_PAR_FLG" = 'Y'
-              AND to_date(per."REC_DATE", 'dd-MON-YY') > date '2018-12-07'
-            ORDER BY to_date(g."G6_STAT_DD", 'dd-MON-YY') desc
+              AND per."REC_DATE"::timestamp > date '2018-12-07'
