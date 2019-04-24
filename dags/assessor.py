@@ -45,7 +45,7 @@ with DAG('assessor',
         opr_extract.set_downstream(opr_pause)
 
     # Loop through the open datasets
-    open_datasets = [ f for f in os.listdir(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}") if not f.startswith('_')]
+    open_datasets = [ f for f in os.listdir(f"{os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}") if not f.startswith('_') and f.endswith('.yml')]
 
     for od in open_datasets:
         od_name = od.split('.')[0]
@@ -75,7 +75,7 @@ with DAG('assessor',
             elif v['export'] == 'geojson':
                 filepath = f"/tmp/{v['name']}.json"
 
-            if v['id'] and len(v['id']) > 0:
+            if 'id' in v.keys() and len(v['id']) > 0 and v['destination'] == 'ago':
                 # Upload to AGO and set downstream of dump_file
                 opr_upload = PythonOperator(
                     task_id=f"upload_{v['name']}",
@@ -86,6 +86,22 @@ with DAG('assessor',
                     }
                 )
                 opr_dump_file.set_downstream(opr_upload)
+                
+            elif v['destination'] == 'mapbox':
+                flags = " ".join(v['flags'])
+                opr_tippecanoe = BashOperator(
+                    task_id=f"bake_mbtiles_{v['name']}",
+                    bash_command=f"tippecanoe -f {flags} -o /tmp/{v['name']}.mbtiles /tmp/{v['name']}.json"
+                )
+
+                opr_tileset_upload = BashOperator(
+                    task_id=f"upload_mbtiles_{v['name']}",
+                    bash_command=f"mapbox-upload --access_token {Variable.get('MAPBOX_ACCESS_TOKEN')} cityofdetroit.{v['tileset']} /tmp/{v['name']}.mbtiles"
+                )
+
+                opr_dump_file.set_downstream(opr_tippecanoe)
+                opr_tippecanoe.set_downstream(opr_tileset_upload)
+
 
 
 

@@ -1,17 +1,17 @@
 parcels:
-  connection: assessor_database
+  connection: mssql_assessor
   source_name: Parcels
 nezlist:
-  connection: assessor_database
+  connection: mssql_assessor
   source_name: NEZList
 legals:
-  connection: assessor_database
+  connection: mssql_assessor
   source_name: Legals
 parcelmaster:
-  connection: assessor_database
+  connection: mssql_assessor
   source_name: ParcelMaster
 sales:
-  connection: assessor_database
+  connection: mssql_assessor
   source_name: Sales
 
 

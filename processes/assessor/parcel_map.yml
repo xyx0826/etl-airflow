@@ -3,9 +3,20 @@ metadata:
   name: Parcel Map
   description: A map of all the assessor's parcels.
 views:
+  mapbox: 
+    destination: mapbox
+    tileset: assessor_parcels
+    flags:
+      - "-Z13"
+      - "-z19"
+    export: geojson
+    select: select 
+        st_transform(wkb_geometry, 4326) as wkb_geometry, 
+        parcelno from assessor.parcel_shapes
   ago:
     destination: ago
     id: 50e74ba507a94bdcbdb955e47781055d
+    as: view
     export: shapefile
     select: select
           sh.parcelno as parcelnum,
