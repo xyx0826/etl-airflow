@@ -1,0 +1,39 @@
+- type: sql
+  statements: 
+  # get current parcels, dedupe and add unique constraint
+  - drop table if exists gql.parcels;
+  - create table gql.parcels as (
+    select 
+      pnum as parcelno, 
+      propstreetcombined as address,
+      s.wkb_geometry
+    from assessor.parcelmaster m	
+      left outer join assessor.parcel_shapes s on s.parcelno = m.pnum);
+  - alter table gql.parcels add column uniq serial primary key;
+  - delete from gql.parcels p using gql.parcels q where q.uniq < p.uniq and q.parcelno = p.parcelno;
+  - alter table gql.parcels add constraint parcels_uniq unique(parcelno);
+  - alter table gql.parcels drop column uniq;
+  # get building permits (overtime from both tidemark and now accela) at known parcels, add index and foreign key constraint
+  - drop table if exists gql.permits;
+  - create table gql.permits as (
+    select 
+      permit_no, 
+      site_address, 
+      parcel_no as parcelno, 
+      permit_issued, 
+      bld_permit_type, 
+      bld_permit_desc 
+    from tidemark.bldg_permits_socrata
+    where parcel_no in (select parcelno from gql.parcels)
+    union
+    select 
+      record_id, 
+      address, 
+      parcel_number as parcelno, 
+      permit_issue_date, 
+      permit_type, 
+      permit_description 
+    from accela.building_permits_socrata
+    where parcel_number in (select parcelno from gql.parcels));
+  - create index permits_pid_idx on gql.permits using btree(parcelno);
+  - alter table gql.permits add constraint permits_to_pid foreign key (parcelno) references gql.parcels(parcelno)
