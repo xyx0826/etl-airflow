@@ -1,0 +1,10 @@
+metadata:
+  name: Demolition Pipeline
+  description: Properties in the demolition pipeline, planned to be knocked down by the DLBA within a year
+  timeframe: To date
+views: 
+  ago:
+    destination: ago
+    id: 0d81898958304265ac45d2f59a7339f5
+    export: shapefile
+    select: select

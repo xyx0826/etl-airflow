@@ -1,0 +1,11 @@
+metadata:
+  name: DLBA Ownership
+  description: All properties owned by the DLBA
+  timeframe: To date
+views: 
+  ago:
+    destination: ago
+    id: 04ba7b817d1d45ba89aab539af7ec438
+    export: shapefile
+    select: select
+              

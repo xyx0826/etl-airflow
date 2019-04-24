@@ -1,0 +1,28 @@
+metadata:
+  name: Own It Now Sold
+  description: All Own It Now properties sold by the DLBA
+  timeframe: To date
+views: 
+  ago:
+    destination: ago
+    id: cc9cb6e697844796bda2fa74fb7614d9
+    export: shapefile
+    select: select 
+              a.actual_closing_date::timestamp as actual_closing_date,
+              a.sale_status,
+              c.address,
+              c.parcel_id,
+              c.program,
+              c.neighborhood,
+              c.council_district,
+              pb.buyer_status,
+              pb.final_sale_price::numeric as final_sale_price,
+              pb.purchaser_type,
+              st_setsrid(st_makepoint(c.acct_longitude::numeric, c.acct_latitude::numeric), 4326) as geom
+            from dlba.dlba_activity a
+              inner join dlba.case c on a.case = c.id
+              inner join dlba.prospective_buyer pb on pb.dlba_activity = a.id
+            where a.dlba_activity_type in ('Demo Pull Sale', 'Demo Pull for Demo Sale', 'Own It Now', 'Own It Now - Bundled Property')
+              and a.actual_closing_date is not null
+              and pb.buyer_status = 'Selected'
+              and c.address not like '%Fake St%'

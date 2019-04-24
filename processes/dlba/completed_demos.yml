@@ -1,0 +1,56 @@
+metadata:
+  name: Detroit Demolitions
+  description: All demolitions completed by the DLBA
+  timeframe: 1/1/2014 - yesterday
+views: 
+  ago:
+    destination: ago
+    id: 5c5783282f11499ab82da107af532ac9
+    export: shapefile
+    select: select
+              address,
+              parcel_id,
+              demo_contractor_text_only as contractor_name,
+              socrata_reported_price as price,
+              demo_primarily_funded_by as funding_source,
+              demo_knock_down_date as demolition_date,
+              non_hhf_commercial_demo as commercial,
+              council_district,
+              neighborhood,
+              st_setsrid(st_makepoint(property_longitude::double precision, property_latitude::double precision), 4326) as geom
+            from dlba.case
+            where demo_knock_down_date::timestamp >= date '2014-01-01'
+              and socrata_reported_price > 0
+              and demo_contractor_text_only != ''
+  socrata:
+    destination: socrata
+    id: rv44-e9di
+    method: replace
+    select: select 
+              address,
+              a.street_direction,
+              case
+                when a.street_number = 'NaN' then null
+                else a.street_number
+              end as street_number,
+              a.street_name,
+              a.street_type,
+              c.parcel_id,
+              demo_contractor_text_only as contractor_name,
+              socrata_reported_price as price,
+              demo_primarily_funded_by as funding_source,
+              demo_knock_down_date as demolition_date,
+              non_hhf_commercial_demo as commercial,
+              c.council_district,
+              c.neighborhood,
+              property_latitude as latitude,
+              property_longitude as longitude,
+              case 
+                when property_latitude is null then null 
+                else concat('location (', property_latitude, ',', property_longitude, ')')
+              end as location
+            from dlba.case c
+              left outer join dlba.account a on c.parcel_id = a.parcel_id
+            where demo_knock_down_date::timestamp >= date '2014-01-01'
+              and socrata_reported_price > 0
+              and demo_contractor_text_only != ''

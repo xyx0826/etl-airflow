@@ -1,0 +1,27 @@
+metadata:
+  name: Upcoming Demos
+  description: Demolitions that are contracted, aka have a projected knock down date, by the DLBA
+  timeframe: To date
+views: 
+  ago:
+    destination: ago
+    id: e506c103f3a045a1aa53f7cd8e70dc1d
+    export: shapefile
+    select: select
+              address,
+              case 
+                when demo_planned_knock_down_date is null 
+                then socrata_projected_knocked_by_date::timestamp
+                else demo_planned_knock_down_date::timestamp
+              end as demolish_by_date,
+              socrata_reported_price as price,
+              parcel_id,
+              demo_contractor_text_only as contractor_name,
+              council_district,
+              non_hhf_commercial_demo as commercial_building, 
+              neighborhood,
+              st_setsrid(st_makepoint(acct_longitude::numeric, acct_latitude::numeric), 4326) as geom
+            from dlba.case
+            where socrata_reported_price::numeric > 0
+              and demo_contractor_text_only <> ''
+              and status = 'Demo Contracted'
