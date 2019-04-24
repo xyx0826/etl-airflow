@@ -59,6 +59,7 @@ with DAG('dah',
             task_id=f"extract_{t}",
             python_callable=sources.extract_source,
             provide_context=True,
+            retries=2,
             op_kwargs=s
         )
 
@@ -80,7 +81,7 @@ with DAG('dah',
             # make view after geocoding & set downstream of dump_file
             opr_make_view = PostgresOperator(
                 task_id=f"make_view_{v['name']}",
-                sql=["set search_path to accela", f"create or replace view {v['dag'] + '.' + v['name']} as ({v['select']})"],
+                sql=["set search_path to dah", f"create or replace view {v['dag'] + '.' + v['name']} as ({v['select']})"],
                 postgres_conn_id='etl_postgres'
             )
 
