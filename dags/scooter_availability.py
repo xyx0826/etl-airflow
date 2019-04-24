@@ -23,7 +23,7 @@ default_args = {
 }
 
 # Storing in a table like this:
-# create table availability (
+# create table scooters.availability (
 # 	oid serial primary key,
 # 	vendor text,
 # 	device_id text,
@@ -31,14 +31,14 @@ default_args = {
 # 	extra json
 # 	)
 	
-# select addgeometrycolumn('public', 'availability', 'geom', 4326, 'POINT', 2)
+# select addgeometrycolumn('scooters', 'availability', 'geom', 4326, 'POINT', 2)
 
 pg = PostgresHook(
-    postgres_conn_id='mobility_postgres'
+    postgres_conn_id='etl_postgres'
   )
 
 def get_bird(**kwargs):
-  http = HttpHook('GET', http_conn_id='bird_mds')
+  http = HttpHook('GET', http_conn_id='http_gbfs_bird')
 
   # authentication for Bird
   # headers = {
@@ -62,7 +62,7 @@ def get_bird(**kwargs):
     lon = b.pop('lon')
 
     insert = f"""
-      insert into availability (
+      insert into scooters.availability (
         vendor, 
         device_id, 
         timestamp,
@@ -81,11 +81,11 @@ def get_bird(**kwargs):
   return response
 
 def get_lime(**kwargs):
-  http = HttpHook('GET', http_conn_id='lime_gbfs')
+  http = HttpHook('GET', http_conn_id='http_gbfs_lime')
 
   # get availability endpoint with limit = 1000
   response = http.run(
-    "/api/partners/v1/gbfs/detroit/free_bike_status"
+    "/api/partners/v1/gbfs/detroit/free_bike_status.json"
   )
 
   limes = json.loads(response.text)
@@ -96,7 +96,7 @@ def get_lime(**kwargs):
     lon = l.pop('lon')
 
     insert = f"""
-      insert into availability (
+      insert into scooters.availability (
         vendor, 
         device_id, 
         timestamp,
@@ -115,7 +115,7 @@ def get_lime(**kwargs):
   return response
 
 def get_spin(**kwargs):
-  http = HttpHook('GET', http_conn_id='spin_gbfs')
+  http = HttpHook('GET', http_conn_id='http_gbfs_spin')
 
   response = http.run(
     "/api/gbfs/v1/detroit/free_bike_status"
@@ -129,7 +129,7 @@ def get_spin(**kwargs):
     lon = s.pop('lon')
 
     insert = f"""
-      insert into availability (
+      insert into scooters.availability (
         vendor, 
         device_id, 
         timestamp,
@@ -172,7 +172,7 @@ with DAG('scooter_availability',
 
   opr_dump_geojson = BashOperator(
     task_id = 'dump_geojson',
-    bash_command = """rm /home/gisteam/scooter_availability.json && ogr2ogr -f GeoJSON /home/gisteam/scooter_availability.json -sql "SELECT * FROM availability where timestamp = (select max(timestamp) from availability)" pg:dbname=mobility public.availability"""
+    bash_command = """ogr2ogr -f GeoJSON /tmp/scooter_availability.json -sql "SELECT * FROM scooters.availability where timestamp = (select max(timestamp) from scooters.availability)" pg:dbname=etl scooters.availability"""
   )
 
   opr_upload_to_ago = PythonOperator(
@@ -181,7 +181,7 @@ with DAG('scooter_availability',
     python_callable=destinations.upload_to_ago,
     op_kwargs={
       "id": "f5a877cdf4be4ea9a71ecbcbabd178d1",
-      "filepath": "/home/gisteam/scooter_availability.json"
+      "filepath": "/tmp/scooter_availability.json"
     }
   )
 

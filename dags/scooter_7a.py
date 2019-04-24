@@ -34,16 +34,16 @@ default_args = {
 # select addgeometrycolumn('public', 'availability', 'geom', 4326, 'POINT', 2)
 
 pg = PostgresHook(
-    postgres_conn_id='mobility_postgres'
+    postgres_conn_id='etl_postgres'
   )
 
 with DAG('scooter_7a',
   default_args=default_args,
-  schedule_interval="0 12 * * *") as dag:
+  schedule_interval="0 11 * * *") as dag:
 
   opr_dump_geojson = BashOperator(
     task_id = 'dump_geojson',
-    bash_command = """rm /home/gisteam/scooter_7a.json && ogr2ogr -f GeoJSON /home/gisteam/scooter_7a.json -sql "SELECT a.*, cd.districts as district FROM availability a inner join council_districts cd on st_contains(cd.wkb_geometry, a.geom) where timestamp = (select max(timestamp) from availability)" pg:dbname=mobility public.availability"""
+    bash_command = """ogr2ogr -f GeoJSON /tmp/scooter_7a.json -sql "SELECT a.*, cd.districts as district FROM scooters.availability a inner join base.council_districts cd on st_contains(st_transform(cd.wkb_geometry, 4326), a.geom) where timestamp = (select max(timestamp) from scooters.availability)" pg:dbname=etl scooters.availability"""
   )
 
   opr_upload_to_ago = PythonOperator(
@@ -52,7 +52,7 @@ with DAG('scooter_7a',
     python_callable=destinations.upload_to_ago,
     op_kwargs={
       "id": "424a9858887c4eadafbbe07b31cfeac3",
-      "filepath": "/home/gisteam/scooter_7a.json"
+      "filepath": "/tmp/scooter_7a.json"
     }
   )
 
