@@ -25,7 +25,7 @@ def extract_source(**kwargs):
       statement = f"select {fields} from {kwargs['source_name']} {where}"
       recs = hook.get_records(statement)
 
-    elif kwargs['connection'].endswith('_salesforce'):
+    elif 'salesforce' in kwargs['connection']:
       hook = SalesforceHook(kwargs['connection'])
       data = hook.get_object_from_salesforce(kwargs['source_name'], kwargs['fields'])
       hook.write_object_to_file([helpers.flatten_salesforce_record(r) for r in data['records']], f"/tmp/{kwargs['source_name'].replace('__c','').lower()}.csv")
@@ -49,7 +49,7 @@ def extract_source(**kwargs):
     if conn_type == 'mssql':
       pg_hook.insert_rows(f"{kwargs['dag']}.{kwargs['name']}", recs)
 
-    elif kwargs['connection'].endswith('_salesforce'):
+    elif 'salesforce' in kwargs['connection']:
       pg_hook.run(f"COPY {kwargs['dag']}.{kwargs['name']} from '/tmp/{kwargs['source_name'].replace('__c','').lower()}.csv' WITH (FORMAT CSV, HEADER, DELIMITER ',')")
     
     elif kwargs['connection'].startswith('/home/gisteam'):
