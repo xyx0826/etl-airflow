@@ -6,7 +6,7 @@ views:
   ago:
     destination: ago
     id: e506c103f3a045a1aa53f7cd8e70dc1d
-    export: shapefile
+    export: geojson
     select: select
               address,
               case 

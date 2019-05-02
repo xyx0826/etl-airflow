@@ -1,0 +1,18 @@
+metadata:
+  name: All Demos
+  description: Completed, contracted and pipeline demos in a single dataset
+  timeframe: To date
+views:
+  graphql:
+    destination: graphql
+    select: select
+              address, parcel_id, demolition_date::timestamp, 'Completed' as status
+            from dlba.completed_demos_ago
+            union all
+            select
+              address, parcel_id, null as date, 'Pipeline' as status
+            from dlba.demo_pipeline_ago
+            union all
+            select
+              address, parcel_id, demolish_by_date::timestamp, 'Upcoming' as status
+            from dlba.contracted_demos_ago

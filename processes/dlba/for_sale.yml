@@ -5,8 +5,8 @@ metadata:
 views: 
   ago:
     destination: ago
-    id: 5c5783282f11499ab82da107af532ac9
-    export: shapefile
+    id: dfb563f061b74f60b799c5eeae617fc8
+    export: geojson
     select: select
               c.address,
               c.parcel_id,

@@ -6,6 +6,17 @@ views:
   ago:
     destination: ago
     id: 04ba7b817d1d45ba89aab539af7ec438
-    export: shapefile
+    export: geojson
     select: select
-              
+        name,
+        parcel_id,
+        inventory_status_socrata,
+        neighborhood,
+        council_district,
+        st_setsrid(st_makepoint(longitude::numeric, latitude::numeric), 4326) as geom
+      from dlba.account
+      where recordtypeid = '012j0000000xKnSAAU'
+        and parcel_id is not null
+        and property_ownership = 'DLBA Owned'
+        and name not like '%Fake St%'
+                    

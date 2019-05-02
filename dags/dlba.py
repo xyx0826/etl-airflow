@@ -58,7 +58,7 @@ with DAG('dlba',
             # make views & set downstream of opr_pause
             opr_make_view = PostgresOperator(
                 task_id=f"make_view_{v['name']}",
-                sql=[f"drop view if exists {v['dag']}.{v['name']}", f"create or replace view {v['dag'] + '.' + v['name']} as ({v['select']})"],
+                sql=[f"drop view if exists {v['dag']}.{v['name']} cascade", f"create or replace view {v['dag'] + '.' + v['name']} as ({v['select']})"],
                 postgres_conn_id='etl_postgres'
             )
             opr_pause.set_downstream(opr_make_view)
@@ -95,29 +95,6 @@ with DAG('dlba',
                     }
                 )
                 opr_dump_file.set_downstream(opr_ago_upload)
-        
 
-
-#   open_datasets = {
-#       "contracted_demos": [
-#           {"arcgis_online": "e506c103f3a045a1aa53f7cd8e70dc1d"}
-#       ],
-#       "demo_pipeline": [
-#           {"arcgis_online": "0d81898958304265ac45d2f59a7339f5"}
-#       ],
-#       "for_sale": [
-#           {"arcgis_online": "dfb563f061b74f60b799c5eeae617fc8"}
-#       ],
-#       "own_it_now_sold": [
-#           {"arcgis_online": "cc9cb6e697844796bda2fa74fb7614d9"}
-#       ],
-#       "all_ownership": [
-#           {"arcgis_online": "04ba7b817d1d45ba89aab539af7ec438"}
-#       ],
-#       "auction_sold": [
-#           {"arcgis_online": "183f901e76a1439ba6c5e04510d275d3"}
-#       ],
-#       "commercial_demos": [
-#           {"arcgis_online": "9c2f2bfa12404e6481e1624700e34cce"}
-#       ],
-#   }
+            elif v['destination'] == 'graphql':
+                pass

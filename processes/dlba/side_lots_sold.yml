@@ -6,7 +6,7 @@ views:
   ago:
     destination: ago
     id: 1528d20710624632bf155fd67b57b963
-    export: shapefile
+    export: geojson
     select: select
               a.actual_closing_date::timestamp as actual_closing_date,
               a.sale_status,

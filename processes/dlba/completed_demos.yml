@@ -6,7 +6,7 @@ views:
   ago:
     destination: ago
     id: 5c5783282f11499ab82da107af532ac9
-    export: shapefile
+    export: geojson
     select: select
               address,
               parcel_id,
@@ -20,7 +20,7 @@ views:
               st_setsrid(st_makepoint(property_longitude::double precision, property_latitude::double precision), 4326) as geom
             from dlba.case
             where demo_knock_down_date::timestamp >= date '2014-01-01'
-              and socrata_reported_price > 0
+              and socrata_reported_price::numeric > 0
               and demo_contractor_text_only != ''
   socrata:
     destination: socrata
@@ -52,5 +52,5 @@ views:
             from dlba.case c
               left outer join dlba.account a on c.parcel_id = a.parcel_id
             where demo_knock_down_date::timestamp >= date '2014-01-01'
-              and socrata_reported_price > 0
+              and socrata_reported_price::numeric > 0
               and demo_contractor_text_only != ''
