@@ -4,6 +4,6 @@ metadata:
 views:
   ago:
     destination: ago
-    id: a92f58700bb44f95852f108061af8ec6
+    id: 5854b96be15b44f2a7ee85f2702790e7
     export: shapefile
     select: select * from dah.bvn

@@ -101,11 +101,11 @@ with DAG('dah',
             if v['id'] and len(v['id']) > 0:
                 # upload to AGO and set downstream of dump_file
                 opr_upload = PythonOperator(
-                    task_id=f"upload_{v['name']}",
-                    python_callable=destinations.upload_to_ago,
+                    task_id=f"replace_{v['name']}",
+                    python_callable=destinations.replace_in_ago,
                     op_kwargs={
                         "id": v['id'],
-                        "filepath": filepath
+                        "table": v['dag'] + '.' + v['name']
                     }
                 )
             
