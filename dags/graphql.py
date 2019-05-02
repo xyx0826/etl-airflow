@@ -1,6 +1,7 @@
 from airflow import DAG
 
 import datetime as dt
+import os, re, yaml
 
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.postgres_operator import PostgresOperator
@@ -40,6 +41,52 @@ with DAG('graphql',
   )
 
   opr_make_graphql_schema >> opr_make_parcels
+
+  # create or replace the postgres functions
+  opr_make_pgfunctions = BashOperator(
+    task_id='make_functions',
+    bash_command=f"psql -d etl -f {os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/functions.sql"
+  )
+
+  # dump the graphql schema (using pg_dump)
+  opr_dump_schema = BashOperator(
+    task_id='dump_schema',
+    bash_command=f"""pg_dump -d etl -t "{dag.dag_id}.*" > /tmp/graphql_dump.sql"""
+  )
+
+  # transfer the dump from etl dev to gql prod (using secure copy)
+  opr_transfer_schema = BashOperator(
+    task_id='transfer_schema',
+    bash_command="scp /tmp/graphql_dump.sql iotuser@10.208.37.176:/home/iotuser/graphql_dump.sql"
+  )
+
+  # transfer shell script to from etl dev to iot box (using scp)
+  opr_transfer_script = BashOperator(
+    task_id='transfer_script',
+    bash_command=f"scp {os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/create_db.sh iotuser@10.208.37.176:/home/iotuser/create_db.sh"
+  )
+
+  # on gql prod, shut down postgraphile (using grep)
+  opr_kill_postgraphile = BashOperator(
+    task_id='kill_postgraphile',
+    bash_command="""
+      ssh iotuser@10.208.37.176 'kill `ps -ax | grep node | grep postgraphile | cut -c 1-5 | sed -n 1p`'
+    """
+  )
+
+  # on gql prod, import pg dump (using a shell script)
+  opr_create_db = BashOperator(
+    task_id='create_db',
+    bash_command=f"ssh iotuser@10.208.37.176 bash /home/iotuser/create_db.sh"
+  )
+
+  # on gql prod, restart postgraphile
+  opr_restart_postgraphile = BashOperator(
+    task_id='restart_postgraphile',
+    bash_command="""
+      ssh iotuser@10.208.37.176 "nohup postgraphile -c postgres://graphql@localhost/graphqlnew -p 5001 --watch --simple-collections both --schema graphql --cors --append-plugins /home/iotuser/postgraphile-plugin-connection-filter/index.js &>/dev/null &"
+    """
+  )
   
   # make the tables that reference parcels
   views = {
@@ -88,49 +135,6 @@ with DAG('graphql',
     )
 
     opr_make_parcels.set_downstream(opr_make_views)
+    opr_make_views.set_downstream(opr_make_pgfunctions)
 
-#   # Create gql tables on etl prod (using .sql script)
-#   opr_create_gql_tables = BashOperator(
-#     task_id='create_gql_tables',
-#     bash_command='ssh gisteam@10.208.132.148 "psql -d etl < ~/create_gql_tables.sql"'
-#   )
-
-#   # Dump gql tables on etl prod (using pg_dump)
-#   opr_dump_gql_tables = BashOperator(
-#     task_id='dump_gql_tables',
-#     bash_command="""ssh gisteam@10.208.132.148 'pg_dump -d etl -t "gql.*" > gql_dump.sql'"""
-#   )
-
-#   # Send gql tables from etl prod to gql prod (using scp)
-#   opr_send_gql_tables = BashOperator(
-#     task_id='send_gql_tables',
-#     bash_command="""
-#       ssh gisteam@10.208.132.148 scp /home/gisteam/gql_dump.sql iotuser@10.208.37.176:/home/iotuser/gql_dump.sql
-#     """
-#   )
-
-#   # shut down Postgraphile
-#   opr_kill_postgraphile = BashOperator(
-#     task_id='kill_postgraphile',
-#     bash_command="""
-#       ssh iotuser@10.208.37.176 'kill `ps -ax | grep node | grep postgraphile | cut -c 1-5 | sed -n 1p`'
-#     """
-#   )
-
-#   # Create fresh gql db on gql prod (using shell script)
-#   opr_create_fresh_db = BashOperator(
-#     task_id='create_fresh_db',
-#     bash_command="""
-#       ssh iotuser@10.208.37.176 bash /home/iotuser/gql_new_prod_db.sh
-#     """
-#   )
-
-#   # restart Postgraphile
-#   opr_restart_postgraphile = BashOperator(
-#     task_id='restart_postgraphile',
-#     bash_command="""
-#       ssh iotuser@10.208.37.176 "nohup postgraphile -c postgres://graphql@localhost/graphql --watch --simple-collections both --schema gql --cors --append-plugins /home/iotuser/postgraphile-plugin-connection-filter/index.js &>/dev/null &"
-#     """
-#   )
-
-# opr_create_gql_tables >> opr_dump_gql_tables >> opr_send_gql_tables >> opr_kill_postgraphile >> opr_create_fresh_db >> opr_restart_postgraphile
+opr_make_pgfunctions >> opr_dump_schema >> opr_transfer_schema >> opr_transfer_script >> opr_kill_postgraphile >> opr_create_db >> opr_restart_postgraphile
