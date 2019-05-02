@@ -42,8 +42,14 @@ def extract_source(**kwargs):
     pg_hook = PostgresHook('etl_postgres')
 
     # Default is to truncate table
-    if 'method' not in kwargs.keys():
+    if 'method' in kwargs.keys() and 'method' == 'replace':
+      pg_hook.run(f"DROP TABLE IF EXISTS {kwargs['dag']}.{kwargs['name']}; CREATE TABLE {kwargs['dag']}.{kwargs['name']};")
+
+    elif 'method' not in kwargs.keys():
       pg_hook.run(f"TRUNCATE TABLE {kwargs['dag']}.{kwargs['name']}")
+
+    else:
+      pass
 
     # Insert the records - another case statement to match above
     if conn_type == 'mssql':

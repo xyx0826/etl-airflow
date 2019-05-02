@@ -30,7 +30,8 @@ def upload_to_ago(**kwargs):
 # kwargs needed:
 #
 # id: This is the AGO item id # of the Feature Layer Collection
-# table: this is the Postgres table/view that we want to send up. It should 
+# table: this is the Postgres table/view that we want to send up.
+# conn_id: This is the postgres connection id (optional: defaults to etl_postgres)
 #
 def replace_in_ago(**kwargs):
   from arcgis.features import FeatureLayer
@@ -41,7 +42,10 @@ def replace_in_ago(**kwargs):
 
   layer = FeatureLayer(layer_url)
 
-  hook = PostgresHook('etl_postgres')
+  if 'conn_id' in kwargs.keys():
+    hook = PostgresHook(kwargs['conn_id'])
+  else:
+    hook = PostgresHook('etl_postgres')
 
   # Here's a query to make an ArcJSON item from each row in the table
   # Note: only works for point geometries right now.
@@ -60,16 +64,25 @@ def replace_in_ago(**kwargs):
   payload = [r[0] for r in res]
 
   # clear out all the rows in the table
-  item.manager.truncate()
+  layer.manager.truncate()
 
   # write all the rows in `res`
   chunk_size = 1000
+  print(f"Sending up {len(payload)} features with a batch size of {chunk_size}")
   for i in range(0, len(payload), chunk_size):
     try:
-      item.edit_features(adds=payload[i:i + chunk_size])
+      layer.edit_features(adds=payload[i:i + chunk_size])
     except:
-      print(f"Errored on {i}")
-      item.edit_features(adds=payload=[i:i + chunk_size])
+      print(f"Errored on {i} - splitting into 2 batches")
+
+      start = i
+      middle = int(i + (chunk_size / 2))
+      end = i + chunk_size
+
+      print(f"start: {start} middle: {middle} end: {end}")
+
+      layer.edit_features(adds=payload[start:middle])
+      layer.edit_features(adds=payload[middle:end])
 
 # # #
 # Function to upload to Socrata
