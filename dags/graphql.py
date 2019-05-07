@@ -63,7 +63,7 @@ with DAG('graphql',
   # transfer shell script to from etl dev to iot box (using scp)
   opr_transfer_script = BashOperator(
     task_id='transfer_script',
-    bash_command=f"scp {os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/create_db.sh iotuser@10.208.37.176:/home/iotuser/create_db.sh"
+    bash_command=f"scp {os.environ['AIRFLOW_HOME']}/processes/{dag.dag_id}/create_db.sh iotuser@10.208.37.176:/home/iotuser/create_db.sh "
   )
 
   # on gql prod, shut down postgraphile (using grep)
@@ -77,14 +77,14 @@ with DAG('graphql',
   # on gql prod, import pg dump (using a shell script)
   opr_create_db = BashOperator(
     task_id='create_db',
-    bash_command=f"ssh iotuser@10.208.37.176 bash /home/iotuser/create_db.sh"
+    bash_command=f"ssh iotuser@10.208.37.176 bash /home/iotuser/create_db.sh "
   )
 
   # on gql prod, restart postgraphile
   opr_restart_postgraphile = BashOperator(
     task_id='restart_postgraphile',
     bash_command="""
-      ssh iotuser@10.208.37.176 "nohup postgraphile -c postgres://graphql@localhost/graphqlnew -p 5001 --watch --simple-collections both --schema graphql --cors --append-plugins /home/iotuser/postgraphile-plugin-connection-filter/index.js &>/dev/null &"
+      ssh iotuser@10.208.37.176 "nohup postgraphile -c postgres://graphql@localhost/graphqlnew -p 5000 --watch --simple-collections only --schema graphql --cors --append-plugins /home/iotuser/postgraphile-plugin-connection-filter/index.js --enhance-graphiql &>/dev/null & "
     """
   )
   
