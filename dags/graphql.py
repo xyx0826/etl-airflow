@@ -70,21 +70,21 @@ with DAG('graphql',
   opr_kill_postgraphile = BashOperator(
     task_id='kill_postgraphile',
     bash_command="""
-      ssh iotuser@10.208.37.176 'kill `ps -ax | grep node | grep postgraphile | cut -c 1-5 | sed -n 1p`'
+      ssh iotuser@10.208.37.176 'kill `ps -ax | grep "node server.js" | cut -c 1-5 | sed -n 1p`'
     """
   )
 
   # on gql prod, import pg dump (using a shell script)
   opr_create_db = BashOperator(
     task_id='create_db',
-    bash_command=f"ssh iotuser@10.208.37.176 bash /home/iotuser/create_db.sh "
+    bash_command=f"""ssh iotuser@10.208.37.176 'dos2unix /home/iotuser/create_db.sh; bash /home/iotuser/create_db.sh'"""
   )
 
   # on gql prod, restart postgraphile
   opr_restart_postgraphile = BashOperator(
     task_id='restart_postgraphile',
     bash_command="""
-      ssh iotuser@10.208.37.176 "nohup postgraphile -c postgres://graphql@localhost/graphqlnew -p 5000 --watch --simple-collections only --schema graphql --cors --append-plugins /home/iotuser/postgraphile-plugin-connection-filter/index.js --enhance-graphiql &>/dev/null & "
+      ssh iotuser@10.208.37.176 "nohup node /home/iotuser/postgraph-server/server.js &>/dev/null & "
     """
   )
   
