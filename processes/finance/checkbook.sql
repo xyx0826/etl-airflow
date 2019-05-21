@@ -1,4 +1,4 @@
--- open checkbook includes data about vendor spending; it does not include payroll
+-- open checkbook includes data about vendor spending; it does not include payroll. open checkbook includes checks that have cleared or are negotiable; it does not include voided payments.
 
 -- in the `finance` schema, there are these tables:
 ---- input: accounts_payable_fy1718
@@ -46,9 +46,17 @@ select
 from accounts_payable_fy1718
 where "STATUS_LOOKUP_CODE" != 'VOIDED';
 
+-- TODO: join to new lookup tables from ocfo and update cateogry desc fields as available
+-- TODO: update "VENDOR_NAME" to mask individuals based on object_desc
+
+-- summary stat: total spending
+select 
+	sum(replace("INV_PMT_DIST_AMT", ',', '')::numeric) as total_spending
+from checkbook_fy1718;
+
 -- summary stat: total spending by dept
 select 
-	sum(replace("INV_PMT_DIST_AMT", ',', '')::numeric) as spending_sum, 
+	sum(replace("INV_PMT_DIST_AMT", ',', '')::numeric) as spending_by_dept, 
 	dept_desc
 from checkbook_fy1718 
 group by dept_desc
@@ -56,7 +64,7 @@ order by sum(replace("INV_PMT_DIST_AMT", ',', '')::numeric) desc;
 
 -- summary stat: top 10 vendors
 select 
-	sum(replace("INV_PMT_DIST_AMT", ',', '')::numeric) as spending_sum, 
+	sum(replace("INV_PMT_DIST_AMT", ',', '')::numeric) as spending_by_vendor, 
 	"VENDOR_NAME"
 from checkbook_fy1718 
 group by "VENDOR_NAME"
